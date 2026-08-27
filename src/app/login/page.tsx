@@ -21,30 +21,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = () => {
     setIsGoogleLoading(true);
-    try {
-      const res = await signIn('google', { callbackUrl: '/generator', redirect: false });
-      if (res?.error) {
-        // Fallback: instant sign-in
-        await signIn('demo-login', {
-          email: 'google.creator@gmail.com',
-          name: 'Google Creator',
-          plan: 'pro',
-          callbackUrl: '/generator',
-          redirect: false,
-        });
-        window.location.href = '/generator';
-      } else if (res?.url) {
-        window.location.href = res.url;
-      } else {
-        window.location.href = '/generator';
-      }
-    } catch (e) {
-      window.location.href = '/generator';
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    signIn('google', { callbackUrl: '/generator' });
   };
 
   const handleDemoSignIn = async (e: React.FormEvent) => {
@@ -110,7 +89,7 @@ export default function LoginPage() {
                 />
               </svg>
             )}
-            <span>{isGoogleLoading ? 'Signing into Studio...' : 'Continue with Google'}</span>
+            <span>{isGoogleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
           </button>
 
           <div className="relative flex items-center justify-center">
