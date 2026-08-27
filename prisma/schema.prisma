@@ -1,0 +1,231 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                     String            @id @default(cuid())
+  name                   String?
+  email                  String            @unique
+  emailVerified          DateTime?
+  image                  String?
+  plan                   String            @default("free") // 'free', 'pro', 'team'
+  role                   String            @default("USER") // 'USER', 'ADMIN'
+  stripeCustomerId       String?           @unique
+  stripeSubscriptionId   String?           @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  accounts               Account[]
+  sessions               Session[]
+  posts                  Post[]
+  voiceProfiles          VoiceProfile[]
+  contentTemplates       ContentTemplate[]
+  linkedInAccount        LinkedInAccount?
+  usageRecords           UsageRecord[]
+  teamMemberships        TeamMember[]
+  ownedTeams             Team[]
+  paymentTransactions    PaymentTransaction[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members   TeamMember[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("MEMBER") // 'OWNER', 'ADMIN', 'MEMBER'
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+model UsageRecord {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periodMonth    String   // e.g. "2026-08"
+  postsGenerated Int      @default(0)
+  postsPublished Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, periodMonth])
+}
+
+model PaymentTransaction {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId         String   // 'pro', 'team'
+  interval       String   @default("annual") // 'monthly', 'annual'
+  amount         Float
+  currency       String   @default("INR") // 'INR', 'USD'
+  paymentMethod  String   @default("QR_UPI") // 'QR_UPI', 'QR_CUSTOM', 'STRIPE'
+  transactionRef String   // UTR / Transaction ID entered by user
+  screenshotUrl  String?
+  status         String   @default("APPROVED") // 'APPROVED', 'PENDING', 'REJECTED'
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model LinkedInAccount {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isConnected          Boolean   @default(false)
+  isSandboxMode        Boolean   @default(true)
+  memberUrn            String?
+  name                 String?   @default("My LinkedIn Profile")
+  headline             String?   @default("Product & Tech Leader | Builder")
+  profilePictureUrl    String?
+  accessTokenEncrypted String?
+  refreshTokenEncrypted String?
+  tokenExpiresAt       DateTime?
+  dailyPostCount       Int       @default(0)
+  dailyPostLimit       Int       @default(25)
+  lastResetDate        String?
+  updatedAt            DateTime  @updatedAt
+}
+
+model ContentTemplate {
+  id          String   @id @default(cuid())
+  userId      String?  // null for prebuilt system templates
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  category    String   @default("general")
+  description String
+  hookPattern String
+  bodyPattern String
+  ctaPattern  String
+  isPrebuilt  Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  posts       Post[]
+}
+
+model VoiceProfile {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  isDefault    Boolean       @default(false)
+  instructions String?
+  styleSummary String?
+  samples      VoiceSample[]
+  posts        Post[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model VoiceSample {
+  id             String        @id @default(cuid())
+  title          String
+  content        String
+  notes          String?
+  tags           String?
+  createdAt      DateTime      @default(now())
+  voiceProfileId String?
+  voiceProfile   VoiceProfile? @relation(fields: [voiceProfileId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic           String
+  content         String
+  tone            String              @default("professional")
+  angle           String?             @default("bold-hook")
+  status          String              @default("DRAFT") // DRAFT, SCHEDULED, QUEUED_RATE_LIMITED, PUBLISHED, FAILED
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  linkedinPostUrn String?
+  imageUrl        String?
+  mediaType       String?             @default("NONE")
+  errorMessage    String?
+  retryCount      Int                 @default(0)
+  lastRetryAt     DateTime?
+  impressions     Int                 @default(0)
+  likes           Int                 @default(0)
+  comments        Int                 @default(0)
+  shares          Int                 @default(0)
+  hookScore       Int?                @default(85)
+  readability     String?             @default("Easy")
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  voiceProfileId  String?
+  voiceProfile    VoiceProfile?       @relation(fields: [voiceProfileId], references: [id], onDelete: SetNull)
+  templateId      String?
+  template        ContentTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  snapshots       AnalyticsSnapshot[]
+}
+
+model AnalyticsSnapshot {
+  id          String   @id @default(cuid())
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  recordedAt  DateTime @default(now())
+  impressions Int      @default(0)
+  likes       Int      @default(0)
+  comments    Int      @default(0)
+  shares      Int      @default(0)
+}
+
+model AppSetting {
+  key   String @id
+  value String
+}
