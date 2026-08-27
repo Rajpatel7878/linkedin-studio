@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { checkCanGeneratePost, incrementUsage } from '@/lib/usage';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { PREBUILT_TEMPLATES } from '@/app/api/templates/route';
+import { PREBUILT_TEMPLATES } from '@/config/templates';
 import { generateSmartFallbackDrafts } from '@/lib/ai/fallbackGenerator';
 
 export const dynamic = 'force-dynamic';
@@ -115,11 +115,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error generating drafts:', error);
-    // Even if top-level error occurs, fallback to generating drafts from request body
     try {
-      const body = await req.json().catch(() => ({ topic: 'Building a startup in public' }));
       const fallbackDrafts = generateSmartFallbackDrafts(
-        body.topic || 'Leadership & Growth',
+        'Building a high-growth startup',
         ['bold-hook', 'listicle', 'storytelling']
       );
       return NextResponse.json({
