@@ -19,6 +19,12 @@ import {
   Clock,
   Layers,
   Flame,
+  Lightbulb,
+  TrendingUp,
+  Target,
+  Briefcase,
+  Users,
+  Code2,
 } from 'lucide-react';
 import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 import { PLANS } from '@/config/plans';
@@ -34,43 +40,90 @@ export default function LandingPage() {
     story: `3 years ago, I gave a 40-slide pitch that almost lost us our biggest enterprise client:\n\nI was rambling through animations and buzzwords.\n\nThe CEO stopped me on slide 6 and said: "Write me a 1-page memo on what actually changes for our bottom line."\n\nThat uncomfortable feedback transformed how we communicate.\n\nHave you ever had to unlearn a bad corporate habit? What was your turning point? #FounderLessons`,
   };
 
+  const contentCategories = [
+    {
+      role: 'Founders & CEOs',
+      icon: TrendingUp,
+      ideas: [
+        'Lessons learned scaling from 0 to \$1M ARR',
+        'Unpopular beliefs about hiring top 1% talent',
+        'Transparent post-mortems of product failures',
+        'Behind-the-scenes decision memos and pivots',
+      ],
+    },
+    {
+      role: 'Software Engineers & Tech Leads',
+      icon: Code2,
+      ideas: [
+        'Architecture breakdowns of high-scale systems',
+        'Mistakes made during cloud database migrations',
+        'Why clean code beats clever code every time',
+        'Tools and workflows that 10x developer productivity',
+      ],
+    },
+    {
+      role: 'Growth Marketers & Creators',
+      icon: Target,
+      ideas: [
+        'Organic distribution playbooks and funnel metrics',
+        'A/B test case studies with exact numbers',
+        'Frameworks for high-converting copywriting',
+        'How to repurpose 1 podcast into 10 LinkedIn posts',
+      ],
+    },
+    {
+      role: 'Sales Leaders & Consultants',
+      icon: Briefcase,
+      ideas: [
+        'Frameworks for closing 6-figure enterprise deals',
+        'The #1 mistake reps make on discovery calls',
+        'How to build trust with C-suite buyers',
+        'Contract negotiation tactics that save deals',
+      ],
+    },
+  ];
+
   const faqs = [
     {
-      q: 'How does Voice Matching work?',
-      a: 'You paste in 3–5 of your real past LinkedIn posts. Our AI extracts your stylistic DNA (sentence length, emoji density, hook style, and vocabulary) and uses it as few-shot context so every post sounds authentically like you.',
+      q: 'What is the best content to post on LinkedIn to get high engagement?',
+      a: 'The highest-performing content on LinkedIn follows 3 core formats: 1) Contrarian opinions backed by real experience, 2) Actionable listicles with bullet points, and 3) Vulnerable storytelling about failures and key career turnarounds. LinkedIn Studio automatically formats your raw ideas into all 3 angles.',
     },
     {
-      q: 'Does it publish directly to my personal LinkedIn profile?',
-      a: 'Yes! We use LinkedIn’s official Share on LinkedIn API via secure OAuth 2.0. Your tokens are encrypted with AES-256-GCM at rest, and we respect all API rate limits automatically.',
+      q: 'How often should I post content on LinkedIn?',
+      a: 'Top LinkedIn creators post 3 to 5 times per week. Consistent weekday posting between 8:00 AM – 10:00 AM local time yields the highest algorithmic distribution. With LinkedIn Studio’s auto-scheduler, you can schedule a whole month of content in 30 minutes.',
     },
     {
-      q: 'Can I use this for free?',
-      a: 'Yes! Our Starter Free plan includes 15 post generations per month, 5 scheduled posts, and access to all 8 prebuilt content templates without needing a credit card.',
+      q: 'How does the AI Voice Cloner replicate my personal writing style?',
+      a: 'You paste 3–5 of your past LinkedIn posts. Our engine extracts your stylistic DNA — sentence cadence, emoji density, hook style, and signature vocabulary — and applies it to every generated post so it sounds authentically like you.',
     },
     {
-      q: 'What happens if I hit LinkedIn API rate limits?',
-      a: 'Unlike other tools that fail silently, our intelligent background dispatcher automatically detects rate limits, transitions your post to a queued state, and safely retries on schedule.',
+      q: 'Does it post directly to my LinkedIn profile?',
+      a: 'Yes! We support official LinkedIn OAuth 2.0 integration. You can publish directly to your feed with 1 click, schedule future posts, or use the 1-click LinkedIn Web Share button.',
+    },
+    {
+      q: 'Can I use LinkedIn Studio for free?',
+      a: 'Yes! Our Starter Free plan includes 15 post generations per month, 5 scheduled posts, and full access to all 8 content templates with zero credit card required.',
     },
   ];
 
   return (
     <div className="space-y-24 pb-20 overflow-hidden">
-      {/* 1. Hero Section */}
+      {/* 1. Hero Section targeting "Content to Post on LinkedIn" */}
       <section className="pt-12 sm:pt-20 text-center max-w-4xl mx-auto px-4 space-y-6">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#0a66c2] text-xs font-bold shadow-2xs animate-fade-in">
           <Sparkles className="w-4 h-4 text-[#0a66c2]" />
-          <span>The Next-Gen AI Content Studio for LinkedIn</span>
+          <span>#1 Free AI LinkedIn Content Generator</span>
         </div>
 
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 tracking-tight leading-[1.08]">
-          Write Viral LinkedIn Posts in{' '}
+          The Best Content to Post on{' '}
           <span className="text-[#0a66c2] underline decoration-blue-200 decoration-wavy decoration-2">
-            Your Authentic Voice
+            LinkedIn in Seconds
           </span>
         </h1>
 
         <p className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          The all-in-one studio for founders, creators, and executives. Turn rough ideas into high-converting posts, visual graphic cards, and automated schedules in seconds.
+          Never stare at a blank screen again. Turn rough thoughts into viral, high-converting LinkedIn posts, visual stat cards, and scheduled campaigns in your authentic voice.
         </p>
 
         {/* CTA Buttons */}
@@ -80,26 +133,26 @@ export default function LandingPage() {
             className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#0a66c2] hover:bg-[#004182] text-white text-sm font-bold shadow-lg shadow-blue-500/25 transition-all active:scale-95"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Start Creating for Free</span>
+            <span>Generate Free LinkedIn Content</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/pricing"
             className="px-8 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold border border-slate-300 shadow-2xs transition-all"
           >
-            View Pricing & Plans
+            View Plans & Pricing
           </Link>
         </div>
 
         <div className="flex items-center justify-center gap-6 text-xs text-slate-400 pt-2 font-medium">
           <span className="flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-emerald-500" /> No credit card required
+            <Check className="w-3.5 h-3.5 text-emerald-500" /> Free Forever Tier
           </span>
           <span className="flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-emerald-500" /> Official LinkedIn API
+            <Check className="w-3.5 h-3.5 text-emerald-500" /> Official LinkedIn Partner Ready
           </span>
           <span className="flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-emerald-500" /> Setup in 2 minutes
+            <Check className="w-3.5 h-3.5 text-emerald-500" /> Real Google & LinkedIn Auth
           </span>
         </div>
       </section>
@@ -112,7 +165,7 @@ export default function LandingPage() {
               <span className="w-3 h-3 rounded-full bg-red-400" />
               <span className="w-3 h-3 rounded-full bg-amber-400" />
               <span className="w-3 h-3 rounded-full bg-emerald-400" />
-              <span className="font-bold text-slate-700 ml-2">Interactive Studio Demo</span>
+              <span className="font-bold text-slate-700 ml-2">Live AI Generation Demo</span>
             </div>
 
             {/* Angle Switcher */}
@@ -148,7 +201,7 @@ export default function LandingPage() {
             {/* Prompt Input Box */}
             <div className="md:col-span-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Test Any Topic or Idea:</label>
+                <label className="text-xs font-bold text-slate-700">Enter Any Topic or Idea:</label>
                 <textarea
                   rows={4}
                   value={demoTopic}
@@ -163,7 +216,7 @@ export default function LandingPage() {
                   <span>Voice Matching Active</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-normal">
-                  Injects your 1-sentence paragraph cadence, bold contrarian openings, and arrow bullet points.
+                  Matches your 1-sentence paragraph cadence, bold contrarian openings, and arrow bullet points.
                 </p>
               </div>
             </div>
@@ -176,7 +229,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <span className="font-bold text-xs text-slate-900 block">Alex Rivera</span>
-                  <span className="text-[11px] text-slate-500">Founder & Tech Strategist • Just now</span>
+                  <span className="text-[11px] text-slate-500">Founder & Creator • Just now</span>
                 </div>
               </div>
 
@@ -193,7 +246,52 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. Core Feature Pillars Grid */}
+      {/* 3. High-Ranking Search Intent: Ideas for Content to Post on LinkedIn */}
+      <section className="max-w-7xl mx-auto px-4 space-y-12">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <span className="text-xs font-bold text-[#0a66c2] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
+            Proven Post Ideas
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            Popular Content Ideas to Post on LinkedIn
+          </h2>
+          <p className="text-sm text-slate-500">
+            Tailored content structures engineered for your specific industry and audience.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {contentCategories.map((cat, idx) => {
+            const Icon = cat.icon;
+            return (
+              <div key={idx} className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0a66c2] flex items-center justify-center">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-base">{cat.role}</h3>
+                  <ul className="space-y-2 text-xs text-slate-600">
+                    {cat.ideas.map((idea, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-[#0a66c2] font-bold">→</span>
+                        <span>{idea}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Link
+                  href="/generator"
+                  className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-blue-50 text-[#0a66c2] font-bold text-xs text-center border border-slate-200 transition-colors block"
+                >
+                  Generate for {cat.role.split(' ')[0]} &rarr;
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 4. Core Feature Pillars Grid */}
       <section id="features" className="max-w-7xl mx-auto px-4 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="text-xs font-bold text-[#0a66c2] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
@@ -270,7 +368,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. Pricing Section */}
+      {/* 5. Pricing Section */}
       <section id="pricing" className="max-w-7xl mx-auto px-4 space-y-10">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="text-xs font-bold text-[#0a66c2] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
@@ -399,11 +497,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. FAQ Section */}
+      {/* 6. FAQ Section */}
       <section id="faq" className="max-w-3xl mx-auto px-4 space-y-8">
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-black text-slate-900">Frequently Asked Questions</h2>
-          <p className="text-xs text-slate-500">Everything you need to know about the product.</p>
+          <p className="text-xs text-slate-500">Everything you need to know about creating viral content on LinkedIn.</p>
         </div>
 
         <div className="space-y-4">
@@ -419,7 +517,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 6. Footer */}
+      {/* 7. Footer */}
       <footer className="border-t border-slate-200 pt-12 text-xs text-slate-500 max-w-7xl mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between gap-6 pb-8">
           <div className="flex items-center gap-2.5">
