@@ -25,14 +25,18 @@ import {
   Briefcase,
   Users,
   Code2,
+  Share2,
+  Cpu,
+  Compass,
 } from 'lucide-react';
 import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
+import { Card3D } from '@/components/ui/Card3D';
 import { PLANS } from '@/config/plans';
 
 export default function LandingPage() {
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('annual');
   const [demoTopic, setDemoTopic] = useState('Why good founders write memos instead of 40-slide decks');
-  const [activeAngle, setActiveAngle] = useState<'story' | 'listicle' | 'bold'>('bold');
+  const [activeAngle, setActiveAngle] = useState<'bold' | 'listicle' | 'story'>('bold');
 
   const demoOutputs = {
     bold: `Unpopular opinion: Slide decks hide weak thinking behind bullet points and animations.\n\nMemos force clarity of thought:\n→ Problem definition\n→ Assumptions tested\n→ Quantitative impact\n→ Trade-offs accepted\n\nIf you cannot write it clearly in 2 pages, you do not understand the problem yet.\n\nAgree or disagree? #Leadership #Strategy #Founders`,
@@ -44,26 +48,29 @@ export default function LandingPage() {
     {
       role: 'Founders & CEOs',
       icon: TrendingUp,
+      badgeColor: 'from-blue-500 to-cyan-500',
       ideas: [
-        'Lessons learned scaling from 0 to \$1M ARR',
+        'Lessons learned scaling from 0 to $1M ARR',
         'Unpopular beliefs about hiring top 1% talent',
         'Transparent post-mortems of product failures',
         'Behind-the-scenes decision memos and pivots',
       ],
     },
     {
-      role: 'Software Engineers & Tech Leads',
+      role: 'Software Engineers',
       icon: Code2,
+      badgeColor: 'from-purple-500 to-indigo-500',
       ideas: [
         'Architecture breakdowns of high-scale systems',
         'Mistakes made during cloud database migrations',
         'Why clean code beats clever code every time',
-        'Tools and workflows that 10x developer productivity',
+        'Tools and workflows that 10x developer speed',
       ],
     },
     {
-      role: 'Growth Marketers & Creators',
+      role: 'Growth Marketers',
       icon: Target,
+      badgeColor: 'from-emerald-500 to-teal-500',
       ideas: [
         'Organic distribution playbooks and funnel metrics',
         'A/B test case studies with exact numbers',
@@ -72,8 +79,9 @@ export default function LandingPage() {
       ],
     },
     {
-      role: 'Sales Leaders & Consultants',
+      role: 'Sales Executives',
       icon: Briefcase,
+      badgeColor: 'from-amber-500 to-orange-500',
       ideas: [
         'Frameworks for closing 6-figure enterprise deals',
         'The #1 mistake reps make on discovery calls',
@@ -107,156 +115,195 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="space-y-24 pb-20 overflow-hidden">
-      {/* 1. Hero Section targeting "Content to Post on LinkedIn" */}
-      <section className="pt-12 sm:pt-20 text-center max-w-4xl mx-auto px-4 space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#0a66c2] text-xs font-bold shadow-2xs animate-fade-in">
-          <Sparkles className="w-4 h-4 text-[#0a66c2]" />
-          <span>#1 Free AI LinkedIn Content Generator</span>
+    <div className="relative space-y-32 pb-24 overflow-hidden">
+      {/* 3D Ambient Background Mesh Gradients */}
+      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[900px] overflow-hidden -z-10">
+        <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-blue-600/20 to-cyan-400/20 blur-[130px] animate-mesh" />
+        <div className="absolute top-20 right-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-indigo-600/20 to-purple-500/20 blur-[140px] animate-mesh" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-full h-[500px] bg-perspective-grid opacity-30 [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      </div>
+
+      {/* 1. 3D Hero Section */}
+      <section className="pt-12 sm:pt-20 text-center max-w-5xl mx-auto px-4 space-y-8 relative">
+        {/* Floating 3D Pill Badge */}
+        <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full glass-badge-3d text-blue-300 text-xs font-black shadow-xl animate-float">
+          <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+          <span>Next-Gen 3D AI Content Engine for LinkedIn</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
         </div>
 
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 tracking-tight leading-[1.08]">
-          The Best Content to Post on{' '}
-          <span className="text-[#0a66c2] underline decoration-blue-200 decoration-wavy decoration-2">
-            LinkedIn in Seconds
+        {/* 3D Gradient Heading */}
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] text-white">
+          Generate Viral LinkedIn Posts in{' '}
+          <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300 bg-clip-text text-transparent underline decoration-cyan-400/30 decoration-wavy decoration-2">
+            3D Speed & Voice
           </span>
         </h1>
 
-        <p className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Never stare at a blank screen again. Turn rough thoughts into viral, high-converting LinkedIn posts, visual stat cards, and scheduled campaigns in your authentic voice.
+        <p className="text-base sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
+          The all-in-one studio for founders, creators, and executives. Turn rough thoughts into viral hooks, branded stat cards, and scheduled campaigns in seconds.
         </p>
 
-        {/* CTA Buttons */}
-        <div className="pt-4 flex flex-wrap items-center justify-center gap-4">
+        {/* 3D Tactile CTA Buttons */}
+        <div className="pt-4 flex flex-wrap items-center justify-center gap-5">
           <Link
             href="/login"
-            className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#0a66c2] hover:bg-[#004182] text-white text-sm font-bold shadow-lg shadow-blue-500/25 transition-all active:scale-95"
+            className="btn-3d-primary flex items-center gap-2.5 px-8 py-4 rounded-2xl text-white text-sm font-black shadow-2xl active:scale-95"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Generate Free LinkedIn Content</span>
+            <Sparkles className="w-4 h-4 text-cyan-200" />
+            <span>Start Creating Free</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/pricing"
-            className="px-8 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 text-sm font-bold border border-slate-300 shadow-2xs transition-all"
+            className="btn-3d-glass px-8 py-4 rounded-2xl text-slate-200 text-sm font-bold active:scale-95"
           >
-            View Plans & Pricing
+            Explore Pricing & Plans
           </Link>
         </div>
 
-        <div className="flex items-center justify-center gap-6 text-xs text-slate-400 pt-2 font-medium">
-          <span className="flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-emerald-500" /> Free Forever Tier
+        {/* 3D Social Proof Badges */}
+        <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 pt-4 font-semibold">
+          <span className="flex items-center gap-2 glass-badge-3d px-3.5 py-1.5 rounded-full text-slate-300">
+            <Check className="w-3.5 h-3.5 text-emerald-400" /> Free Forever Tier ($0)
           </span>
-          <span className="flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-emerald-500" /> Official LinkedIn Partner Ready
+          <span className="flex items-center gap-2 glass-badge-3d px-3.5 py-1.5 rounded-full text-slate-300">
+            <Check className="w-3.5 h-3.5 text-emerald-400" /> Official LinkedIn OAuth 2.0
           </span>
-          <span className="flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-emerald-500" /> Real Google & LinkedIn Auth
+          <span className="flex items-center gap-2 glass-badge-3d px-3.5 py-1.5 rounded-full text-slate-300">
+            <Check className="w-3.5 h-3.5 text-emerald-400" /> Real Google & LinkedIn Auth
           </span>
         </div>
       </section>
 
-      {/* 2. Interactive Live Studio Preview */}
-      <section className="max-w-5xl mx-auto px-4">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
-          <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+      {/* 2. Interactive 3D Live Studio Showcase */}
+      <section className="max-w-6xl mx-auto px-4 relative">
+        {/* Floating 3D Satellite Badges */}
+        <div className="hidden lg:flex items-center gap-3 absolute -top-8 -left-6 z-30 glass-panel-3d px-4 py-2.5 rounded-2xl text-xs font-bold text-emerald-300 border-emerald-500/30 shadow-2xl animate-float">
+          <Flame className="w-4 h-4 text-orange-400" />
+          <span>Viral Hook Score: <strong className="text-white font-mono">98/100</strong></span>
+        </div>
+
+        <div className="hidden lg:flex items-center gap-3 absolute -bottom-6 -right-6 z-30 glass-panel-3d px-4 py-2.5 rounded-2xl text-xs font-bold text-cyan-300 border-cyan-500/30 shadow-2xl animate-float-reverse">
+          <Zap className="w-4 h-4 text-yellow-400" />
+          <span>LinkedIn Algorithm 2026 Boosted 🚀</span>
+        </div>
+
+        {/* 3D Tilt Card Container */}
+        <Card3D
+          depth={8}
+          glowColor="rgba(56, 189, 248, 0.25)"
+          className="glass-panel-3d border border-slate-700/60 shadow-2xl"
+        >
+          {/* Header Bar */}
+          <div className="p-4 sm:p-5 border-b border-slate-700/60 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-900/60">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-400" />
-              <span className="w-3 h-3 rounded-full bg-amber-400" />
-              <span className="w-3 h-3 rounded-full bg-emerald-400" />
-              <span className="font-bold text-slate-700 ml-2">Live AI Generation Demo</span>
+              <span className="w-3 h-3 rounded-full bg-red-500/80 shadow-sm shadow-red-500/50" />
+              <span className="w-3 h-3 rounded-full bg-amber-500/80 shadow-sm shadow-amber-500/50" />
+              <span className="w-3 h-3 rounded-full bg-emerald-500/80 shadow-sm shadow-emerald-500/50" />
+              <span className="font-bold text-slate-200 ml-2 tracking-wide">
+                Interactive 3D Creator Studio
+              </span>
             </div>
 
-            {/* Angle Switcher */}
-            <div className="flex items-center bg-slate-200 p-1 rounded-xl font-bold">
+            {/* 3D Angle Switcher Tabs */}
+            <div className="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700 font-bold text-xs">
               <button
                 onClick={() => setActiveAngle('bold')}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  activeAngle === 'bold' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'
+                className={`px-3.5 py-1.5 rounded-lg transition-all ${
+                  activeAngle === 'bold'
+                    ? 'bg-[#0a66c2] text-white shadow-lg shadow-blue-500/30'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 🔥 Bold Hook
               </button>
               <button
                 onClick={() => setActiveAngle('listicle')}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  activeAngle === 'listicle' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'
+                className={`px-3.5 py-1.5 rounded-lg transition-all ${
+                  activeAngle === 'listicle'
+                    ? 'bg-[#0a66c2] text-white shadow-lg shadow-blue-500/30'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                🔢 Listicle & Bullets
+                🔢 Listicle
               </button>
               <button
                 onClick={() => setActiveAngle('story')}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  activeAngle === 'story' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'
+                className={`px-3.5 py-1.5 rounded-lg transition-all ${
+                  activeAngle === 'story'
+                    ? 'bg-[#0a66c2] text-white shadow-lg shadow-blue-500/30'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                📖 Story Narrative
+                📖 Story
               </button>
             </div>
           </div>
 
-          <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            {/* Prompt Input Box */}
+          <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            {/* Input Prompt Box */}
             <div className="md:col-span-5 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700">Enter Any Topic or Idea:</label>
+                <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                  <span>Enter Any Rough Idea or Topic:</span>
+                  <span className="text-[10px] text-cyan-400 uppercase font-mono">Live Generator</span>
+                </label>
                 <textarea
                   rows={4}
                   value={demoTopic}
                   onChange={(e) => setDemoTopic(e.target.value)}
-                  className="w-full p-3 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+                  className="w-full p-3.5 text-xs rounded-2xl border border-slate-700 bg-slate-900/90 text-white focus:outline-hidden focus:ring-2 focus:ring-[#0a66c2] transition-all shadow-inner"
                 />
               </div>
 
-              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 text-xs space-y-2 text-slate-700">
-                <div className="font-bold text-[#0a66c2] flex items-center gap-1.5">
-                  <Mic className="w-3.5 h-3.5" />
-                  <span>Voice Matching Active</span>
+              <div className="p-4 rounded-2xl glass-panel-3d border border-blue-500/20 text-xs space-y-2 text-slate-300">
+                <div className="font-bold text-cyan-300 flex items-center gap-1.5">
+                  <Mic className="w-4 h-4 text-cyan-400" />
+                  <span>3D Personal Voice Cloner Active</span>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-normal">
-                  Matches your 1-sentence paragraph cadence, bold contrarian openings, and arrow bullet points.
+                <p className="text-[11px] text-slate-400 leading-normal">
+                  Extracts your 1-sentence paragraph cadence, bold contrarian openings, and arrow bullet points for authentic engagement.
                 </p>
               </div>
             </div>
 
-            {/* Live Feed Output */}
-            <div className="md:col-span-7 bg-slate-50 rounded-2xl border border-slate-200 p-6 space-y-4">
+            {/* Generated Output Card */}
+            <div className="md:col-span-7 rounded-2xl glass-panel-3d border border-slate-700/80 p-6 space-y-4 shadow-xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#0a66c2] text-white flex items-center justify-center font-bold text-sm">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0a66c2] to-cyan-500 text-white flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/30">
                   AR
                 </div>
                 <div>
-                  <span className="font-bold text-xs text-slate-900 block">Alex Rivera</span>
-                  <span className="text-[11px] text-slate-500">Founder & Creator • Just now</span>
+                  <span className="font-bold text-xs text-white block">Alex Rivera</span>
+                  <span className="text-[11px] text-slate-400">Founder & Tech Strategist • Just now</span>
                 </div>
               </div>
 
-              <div className="text-xs leading-relaxed text-slate-800 whitespace-pre-line font-sans">
+              <div className="text-xs leading-relaxed text-slate-200 whitespace-pre-line font-sans select-text">
                 {demoOutputs[activeAngle]}
               </div>
 
-              <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Hook Score: <strong className="text-emerald-600 font-mono">92/100 (Viral)</strong></span>
-                <span>Above-the-fold Cutoff: <strong className="text-blue-600 font-mono">148 / 210 chars</strong></span>
+              <div className="pt-3 border-t border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
+                <span>Hook Score: <strong className="text-emerald-400 font-mono">92/100 (Viral)</strong></span>
+                <span>Cutoff: <strong className="text-cyan-400 font-mono">148 / 210 chars</strong></span>
               </div>
             </div>
           </div>
-        </div>
+        </Card3D>
       </section>
 
-      {/* 3. High-Ranking Search Intent: Ideas for Content to Post on LinkedIn */}
+      {/* 3. 3D Industry Content Cards */}
       <section className="max-w-7xl mx-auto px-4 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-[#0a66c2] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
-            Proven Post Ideas
+          <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider glass-badge-3d px-3.5 py-1 rounded-full">
+            Tailored Industry Frameworks
           </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             Popular Content Ideas to Post on LinkedIn
           </h2>
-          <p className="text-sm text-slate-500">
-            Tailored content structures engineered for your specific industry and audience.
+          <p className="text-sm text-slate-400">
+            Tailored content structures engineered for your specific niche and target audience.
           </p>
         </div>
 
@@ -264,129 +311,135 @@ export default function LandingPage() {
           {contentCategories.map((cat, idx) => {
             const Icon = cat.icon;
             return (
-              <div key={idx} className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0a66c2] flex items-center justify-center">
-                    <Icon className="w-5 h-5" />
+              <Card3D
+                key={idx}
+                depth={12}
+                glowColor="rgba(14, 165, 233, 0.2)"
+                className="glass-panel-3d p-6 space-y-5 flex flex-col justify-between border border-slate-800 hover:border-slate-700 transition-colors"
+              >
+                <div className="space-y-4">
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${cat.badgeColor} text-white flex items-center justify-center shadow-lg`}>
+                    <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-base">{cat.role}</h3>
-                  <ul className="space-y-2 text-xs text-slate-600">
+                  <h3 className="font-bold text-white text-base">{cat.role}</h3>
+                  <ul className="space-y-2.5 text-xs text-slate-300">
                     {cat.ideas.map((idea, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="text-[#0a66c2] font-bold">→</span>
+                        <span className="text-cyan-400 font-bold">→</span>
                         <span>{idea}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
+
                 <Link
-                  href="/generator"
-                  className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-blue-50 text-[#0a66c2] font-bold text-xs text-center border border-slate-200 transition-colors block"
+                  href="/login"
+                  className="w-full py-2.5 px-3 rounded-xl btn-3d-glass text-cyan-300 font-bold text-xs text-center border border-slate-700 block transition-all"
                 >
                   Generate for {cat.role.split(' ')[0]} &rarr;
                 </Link>
-              </div>
+              </Card3D>
             );
           })}
         </div>
       </section>
 
-      {/* 4. Core Feature Pillars Grid */}
+      {/* 4. 3D Feature Matrix */}
       <section id="features" className="max-w-7xl mx-auto px-4 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-[#0a66c2] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
-            Full Content Engine
+          <span className="text-xs font-bold text-blue-400 uppercase tracking-wider glass-badge-3d px-3.5 py-1 rounded-full">
+            Full 3D Content Engine
           </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             Everything You Need to Dominate LinkedIn
           </h2>
-          <p className="text-sm text-slate-500">
-            A complete suite of creator tools designed specifically for LinkedIn’s unique engagement algorithms.
+          <p className="text-sm text-slate-400">
+            A complete suite of creator tools designed specifically for LinkedIn’s unique algorithms.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-sm hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0a66c2] flex items-center justify-center">
+          <Card3D depth={10} className="glass-panel-3d p-8 space-y-4 border border-slate-800">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-cyan-400 border border-blue-500/30 flex items-center justify-center">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Multi-Angle Post Generator</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="text-lg font-bold text-white">Multi-Angle Post Generator</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
               Generate 3 distinct variations per topic: Storytelling Narrative, Listicle & Bullets, and Bold Scroll-Stopping Hook.
             </p>
-          </div>
+          </Card3D>
 
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-sm hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center">
+          <Card3D depth={10} className="glass-panel-3d p-8 space-y-4 border border-slate-800">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center">
               <Mic className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Few-Shot Voice Cloner</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Paste 3–5 real past posts. The AI extracts sentence length, emoji frequency, and vocabulary to replicate your exact tone.
+            <h3 className="text-lg font-bold text-white">Few-Shot Voice Cloner</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Paste 3–5 past posts. The AI extracts sentence length, emoji frequency, and vocabulary to replicate your exact tone.
             </p>
-          </div>
+          </Card3D>
 
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-sm hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+          <Card3D depth={10} className="glass-panel-3d p-8 space-y-4 border border-slate-800">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
               <FileText className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">8 Proven Content Templates</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="text-lg font-bold text-white">8 Proven Content Templates</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
               Prebuilt structures for intros, career milestones, lesson learned stories, hot takes, build-in-public metrics, and case studies.
             </p>
-          </div>
+          </Card3D>
 
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-sm hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center">
+          <Card3D depth={10} className="glass-panel-3d p-8 space-y-4 border border-slate-800">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
               <Zap className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Hook & Readability Inspector</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="text-lg font-bold text-white">Hook & Readability Inspector</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
               Live Hook Strength scoring (0–100), 3 alternative hook rewrites, corporate jargon flags, and ranked hashtag suggestions.
             </p>
-          </div>
+          </Card3D>
 
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-sm hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center">
+          <Card3D depth={10} className="glass-panel-3d p-8 space-y-4 border border-slate-800">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center">
               <ImageIcon className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Visual Headline & Stat Cards</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="text-lg font-bold text-white">Visual Headline & Stat Cards</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
               Generate branded quote and stat graphic cards with 6 theme presets. Export as PNG or attach directly to posts.
             </p>
-          </div>
+          </Card3D>
 
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-sm hover:shadow-md transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center">
+          <Card3D depth={10} className="glass-panel-3d p-8 space-y-4 border border-slate-800">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
               <Calendar className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Official LinkedIn Scheduler</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <h3 className="text-lg font-bold text-white">Official LinkedIn Scheduler</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
               Official OAuth 2.0 publishing with automated rate-limit detection and auto-retry queueing instead of silent failures.
             </p>
-          </div>
+          </Card3D>
         </div>
       </section>
 
-      {/* 5. Pricing Section */}
+      {/* 5. 3D Pricing Section */}
       <section id="pricing" className="max-w-7xl mx-auto px-4 space-y-10">
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-[#0a66c2] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full">
+          <span className="text-xs font-bold text-blue-400 uppercase tracking-wider glass-badge-3d px-3.5 py-1 rounded-full">
             Transparent Pricing
           </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             Plans for Creators at Every Stage
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             Start for free and upgrade whenever you are ready for unlimited generation.
           </p>
 
           <div className="pt-2 flex items-center justify-center">
-            <div className="bg-slate-200/70 p-1 rounded-2xl inline-flex items-center text-xs font-bold text-slate-700">
+            <div className="glass-panel-3d p-1 rounded-2xl inline-flex items-center text-xs font-bold border border-slate-700">
               <button
                 onClick={() => setBillingInterval('monthly')}
                 className={`px-4 py-1.5 rounded-xl transition-all ${
-                  billingInterval === 'monthly' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'
+                  billingInterval === 'monthly' ? 'bg-[#0a66c2] text-white shadow-lg' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Monthly
@@ -394,7 +447,7 @@ export default function LandingPage() {
               <button
                 onClick={() => setBillingInterval('annual')}
                 className={`px-4 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                  billingInterval === 'annual' ? 'bg-[#0a66c2] text-white shadow-2xs' : 'text-slate-600'
+                  billingInterval === 'annual' ? 'bg-[#0a66c2] text-white shadow-lg' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <span>Annual</span>
@@ -408,17 +461,17 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {/* Free */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 flex flex-col justify-between shadow-sm">
+          <Card3D depth={8} className="glass-panel-3d p-8 flex flex-col justify-between border border-slate-800">
             <div className="space-y-4">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">{PLANS.free.name}</h3>
-                <p className="text-xs text-slate-500 mt-1">{PLANS.free.description}</p>
+                <h3 className="text-xl font-bold text-white">{PLANS.free.name}</h3>
+                <p className="text-xs text-slate-400 mt-1">{PLANS.free.description}</p>
               </div>
-              <div className="text-4xl font-black text-slate-900">$0</div>
-              <div className="space-y-3 pt-6 border-t border-slate-100 text-xs">
+              <div className="text-4xl font-black text-white">$0</div>
+              <div className="space-y-3 pt-6 border-t border-slate-800 text-xs">
                 {PLANS.free.features.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-slate-700">
-                    <Check className="w-4 h-4 text-[#0a66c2] flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-2.5 text-slate-300">
+                    <Check className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                     <span>{f}</span>
                   </div>
                 ))}
@@ -426,32 +479,36 @@ export default function LandingPage() {
             </div>
             <Link
               href="/login"
-              className="mt-8 w-full py-3 rounded-xl border border-slate-300 text-center font-bold text-xs text-slate-800 hover:bg-slate-50 transition-colors block"
+              className="mt-8 w-full py-3 rounded-xl btn-3d-glass text-center font-bold text-xs text-slate-200 block"
             >
               Start Free
             </Link>
-          </div>
+          </Card3D>
 
-          {/* Pro */}
-          <div className="bg-gradient-to-b from-blue-50/70 to-white rounded-3xl border-2 border-[#0a66c2] p-8 flex flex-col justify-between shadow-xl shadow-blue-500/10 relative">
-            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#0a66c2] text-white text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm">
-              Most Popular
+          {/* Pro (Elevated 3D) */}
+          <Card3D
+            depth={15}
+            glowColor="rgba(10, 102, 194, 0.45)"
+            className="glass-panel-3d p-8 flex flex-col justify-between border-2 border-cyan-500/80 shadow-2xl relative"
+          >
+            <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-[11px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-lg">
+              Most Popular ⭐
             </span>
             <div className="space-y-4">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">{PLANS.pro.name}</h3>
-                <p className="text-xs text-slate-500 mt-1">{PLANS.pro.description}</p>
+                <h3 className="text-xl font-bold text-white">{PLANS.pro.name}</h3>
+                <p className="text-xs text-slate-300 mt-1">{PLANS.pro.description}</p>
               </div>
-              <div className="flex items-baseline gap-1 text-slate-900">
-                <span className="text-5xl font-black">
+              <div className="flex items-baseline gap-1 text-white">
+                <span className="text-5xl font-black text-cyan-300">
                   ${billingInterval === 'annual' ? PLANS.pro.priceAnnual : PLANS.pro.priceMonthly}
                 </span>
-                <span className="text-xs text-slate-500 font-semibold">/ month</span>
+                <span className="text-xs text-slate-400 font-semibold">/ month</span>
               </div>
-              <div className="space-y-3 pt-6 border-t border-slate-100 text-xs">
+              <div className="space-y-3 pt-6 border-t border-slate-700 text-xs">
                 {PLANS.pro.features.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-slate-700">
-                    <Check className="w-4 h-4 text-[#0a66c2] flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-2.5 text-slate-200">
+                    <Check className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                     <span>{f}</span>
                   </div>
                 ))}
@@ -459,29 +516,29 @@ export default function LandingPage() {
             </div>
             <Link
               href="/login"
-              className="mt-8 w-full py-3.5 rounded-xl bg-[#0a66c2] hover:bg-[#004182] text-white font-bold text-xs text-center shadow-md shadow-blue-500/20 transition-all block active:scale-98"
+              className="mt-8 w-full py-3.5 rounded-xl btn-3d-primary text-white font-bold text-xs text-center block active:scale-98"
             >
               Get Started with Pro
             </Link>
-          </div>
+          </Card3D>
 
           {/* Team */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 flex flex-col justify-between shadow-sm">
+          <Card3D depth={8} className="glass-panel-3d p-8 flex flex-col justify-between border border-slate-800">
             <div className="space-y-4">
               <div>
-                <h3 className="text-xl font-bold text-slate-900">{PLANS.team.name}</h3>
-                <p className="text-xs text-slate-500 mt-1">{PLANS.team.description}</p>
+                <h3 className="text-xl font-bold text-white">{PLANS.team.name}</h3>
+                <p className="text-xs text-slate-400 mt-1">{PLANS.team.description}</p>
               </div>
-              <div className="flex items-baseline gap-1 text-slate-900">
-                <span className="text-5xl font-black">
+              <div className="flex items-baseline gap-1 text-white">
+                <span className="text-5xl font-black text-purple-300">
                   ${billingInterval === 'annual' ? PLANS.team.priceAnnual : PLANS.team.priceMonthly}
                 </span>
-                <span className="text-xs text-slate-500 font-semibold">/ month</span>
+                <span className="text-xs text-slate-400 font-semibold">/ month</span>
               </div>
-              <div className="space-y-3 pt-6 border-t border-slate-100 text-xs">
+              <div className="space-y-3 pt-6 border-t border-slate-800 text-xs">
                 {PLANS.team.features.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-slate-700">
-                    <Check className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-2.5 text-slate-300">
+                    <Check className="w-4 h-4 text-purple-400 flex-shrink-0" />
                     <span>{f}</span>
                   </div>
                 ))}
@@ -489,61 +546,61 @@ export default function LandingPage() {
             </div>
             <Link
               href="/login"
-              className="mt-8 w-full py-3 rounded-xl bg-slate-900 hover:bg-black text-white text-center font-bold text-xs transition-colors block"
+              className="mt-8 w-full py-3 rounded-xl btn-3d-glass text-purple-300 text-center font-bold text-xs block"
             >
               Get Team Plan
             </Link>
-          </div>
+          </Card3D>
         </div>
       </section>
 
-      {/* 6. FAQ Section */}
+      {/* 6. 3D FAQ Section */}
       <section id="faq" className="max-w-3xl mx-auto px-4 space-y-8">
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-black text-slate-900">Frequently Asked Questions</h2>
-          <p className="text-xs text-slate-500">Everything you need to know about creating viral content on LinkedIn.</p>
+          <h2 className="text-3xl font-black text-white">Frequently Asked Questions</h2>
+          <p className="text-xs text-slate-400">Everything you need to know about creating viral content on LinkedIn.</p>
         </div>
 
         <div className="space-y-4">
           {faqs.map((faq, idx) => (
-            <div key={idx} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-2 shadow-2xs">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#0a66c2] flex-shrink-0" />
+            <Card3D key={idx} depth={5} className="glass-panel-3d p-6 space-y-2 border border-slate-800">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2.5">
+                <HelpCircle className="w-4 h-4 text-cyan-400 flex-shrink-0" />
                 <span>{faq.q}</span>
               </h3>
-              <p className="text-xs text-slate-600 leading-relaxed pl-6">{faq.a}</p>
-            </div>
+              <p className="text-xs text-slate-400 leading-relaxed pl-6.5">{faq.a}</p>
+            </Card3D>
           ))}
         </div>
       </section>
 
       {/* 7. Footer */}
-      <footer className="border-t border-slate-200 pt-12 text-xs text-slate-500 max-w-7xl mx-auto px-4">
+      <footer className="border-t border-slate-800/80 pt-12 text-xs text-slate-400 max-w-7xl mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between gap-6 pb-8">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#0a66c2] flex items-center justify-center text-white font-bold">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0a66c2] to-cyan-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
               <LinkedinIcon className="w-5 h-5" />
             </div>
-            <span className="font-bold text-slate-900 text-sm">LinkedIn Studio</span>
+            <span className="font-bold text-white text-sm">LinkedIn Studio 3D</span>
           </div>
 
           <div className="flex items-center gap-6 font-semibold">
-            <Link href="/privacy" className="hover:text-slate-900 transition-colors">
+            <Link href="/privacy" className="hover:text-cyan-400 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-slate-900 transition-colors">
+            <Link href="/terms" className="hover:text-cyan-400 transition-colors">
               Terms of Service
             </Link>
-            <Link href="/pricing" className="hover:text-slate-900 transition-colors">
+            <Link href="/pricing" className="hover:text-cyan-400 transition-colors">
               Pricing
             </Link>
-            <Link href="/login" className="hover:text-slate-900 transition-colors">
+            <Link href="/login" className="hover:text-cyan-400 transition-colors">
               Sign In
             </Link>
           </div>
         </div>
 
-        <div className="text-center text-[11px] text-slate-400 border-t border-slate-100 pt-6">
+        <div className="text-center text-[11px] text-slate-500 border-t border-slate-800/60 pt-6">
           © {new Date().getFullYear()} LinkedIn Studio SaaS. All rights reserved. Not affiliated with LinkedIn Corporation.
         </div>
       </footer>
