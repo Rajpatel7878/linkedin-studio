@@ -65,8 +65,8 @@ export function ContentTemplatePicker({
             onClick={() => setActiveCategory(cat.key)}
             className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all ${
               activeCategory === cat.key
-                ? 'bg-[#0a66c2] text-white shadow-2xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-[#0a66c2] text-white shadow-lg'
+                : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700/80 hover:text-white border border-slate-700/60'
             }`}
           >
             {cat.label}
@@ -80,21 +80,21 @@ export function ContentTemplatePicker({
         <button
           type="button"
           onClick={() => onSelectTemplate(null)}
-          className={`p-3.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
+          className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all ${
             selectedTemplateId === null
-              ? 'border-[#0a66c2] bg-blue-50/70 ring-1 ring-[#0a66c2] shadow-2xs'
-              : 'border-slate-200 hover:border-slate-300 bg-white'
+              ? 'border-cyan-500/80 bg-blue-950/40 ring-1 ring-cyan-500/80 shadow-lg'
+              : 'border-slate-800 hover:border-slate-700 bg-slate-900/80'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-800">
+            <span className="text-xs font-bold text-slate-200">
               ✨ Freeform / Custom Topic
             </span>
             {selectedTemplateId === null && (
-              <Check className="w-3.5 h-3.5 text-[#0a66c2]" />
+              <Check className="w-3.5 h-3.5 text-cyan-400" />
             )}
           </div>
-          <p className="text-[11px] text-slate-500 line-clamp-2">
+          <p className="text-[11px] text-slate-400 line-clamp-2">
             AI generates drafts purely from your prompt notes without fixed template structures.
           </p>
         </button>
@@ -108,27 +108,27 @@ export function ContentTemplatePicker({
               key={template.id}
               type="button"
               onClick={() => onSelectTemplate(template)}
-              className={`p-3.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
+              className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all ${
                 isSelected
-                  ? 'border-[#0a66c2] bg-blue-50/70 ring-1 ring-[#0a66c2] shadow-2xs'
-                  : 'border-slate-200 hover:border-slate-300 bg-white'
+                  ? 'border-cyan-500/80 bg-blue-950/40 ring-1 ring-cyan-500/80 shadow-lg'
+                  : 'border-slate-800 hover:border-slate-700 bg-slate-900/80'
               }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-slate-900 line-clamp-1">
+                  <span className="text-xs font-bold text-white line-clamp-1">
                     {template.name}
                   </span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-[#0a66c2]" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-cyan-400" />}
                 </div>
-                <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
                   {template.description}
                 </p>
               </div>
 
-              <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
-                <span className="capitalize">{template.category}</span>
-                <span className="text-[#0a66c2] font-semibold">Use Pattern →</span>
+              <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500">
+                <span className="capitalize text-slate-400">{template.category}</span>
+                <span className="text-cyan-400 font-semibold">Use Pattern →</span>
               </div>
             </button>
           );

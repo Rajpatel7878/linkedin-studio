@@ -51,7 +51,6 @@ export default function CalendarPage() {
   };
 
   const handleCreateForDate = (date: Date) => {
-    // Set schedule time to 9:00 AM on that day
     const scheduledTime = new Date(date);
     scheduledTime.setHours(9, 0, 0, 0);
 
@@ -114,24 +113,24 @@ export default function CalendarPage() {
       {/* Calendar Page Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-            <CalendarIcon className="w-7 h-7 text-[#0a66c2]" />
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
+            <CalendarIcon className="w-7 h-7 text-cyan-400" />
             Content Calendar & Pipeline
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Plan, schedule, and monitor your upcoming and published LinkedIn content.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Calendar / List View Mode Toggle */}
-          <div className="flex items-center bg-white border border-slate-200 p-1 rounded-xl shadow-2xs">
+          <div className="flex items-center bg-slate-900 border border-slate-700/80 p-1 rounded-xl shadow-lg">
             <button
               onClick={() => setViewMode('calendar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 viewMode === 'calendar'
-                  ? 'bg-[#0a66c2] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#0a66c2] text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               <CalendarIcon className="w-3.5 h-3.5" />
@@ -139,10 +138,10 @@ export default function CalendarPage() {
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 viewMode === 'list'
-                  ? 'bg-[#0a66c2] text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#0a66c2] text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -155,9 +154,9 @@ export default function CalendarPage() {
               setEditingPost(null);
               setIsEditorOpen(true);
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0a66c2] hover:bg-[#004182] text-white font-bold text-xs shadow-xs transition-all active:scale-95"
+            className="btn-3d-primary flex items-center gap-1.5 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-md active:scale-95"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-cyan-200" />
             <span>Create Post</span>
           </button>
         </div>
@@ -166,7 +165,7 @@ export default function CalendarPage() {
       {/* Main View Area */}
       {isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#0a66c2]" />
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
         </div>
       ) : viewMode === 'calendar' ? (
         <MonthView

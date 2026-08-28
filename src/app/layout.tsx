@@ -153,7 +153,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full bg-slate-50">
+    <html lang="en" className="h-full dark bg-[#090d16]">
       <head>
         <meta name="google-site-verification" content="google1356ca983175fb32" />
         <meta name="google-site-verification" content="1356ca983175fb32" />
@@ -162,14 +162,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.className} min-h-full flex flex-col text-slate-900 antialiased`}>
+      <body className={`${inter.className} min-h-full flex flex-col bg-[#090d16] text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200`}>
         <AuthProvider>
-          <div className="flex h-screen overflow-hidden bg-slate-50">
+          <div className="flex h-screen overflow-hidden bg-[#090d16]">
             <Sidebar />
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#090d16]">
               <Navbar />
-              <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <div className="max-w-7xl mx-auto">{children}</div>
+              <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#090d16]">
+                <div className="max-w-7xl mx-auto w-full">{children}</div>
               </main>
             </div>
           </div>

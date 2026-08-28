@@ -102,11 +102,11 @@ export function PostEditorModal({
 
   const characterCount = content.length;
   const isOverLimit = characterCount > 3000;
-  const isNearLimit = characterCount > 2700 && !isOverLimit;
+  const isNearLimit = characterCount > 2700;
   const seeMoreCutoffIndex = 210;
 
-  // Insert formatted text or bullets
-  const applyTextFormat = (formatType: 'bold' | 'italic' | 'bullet' | 'arrow' | 'emoji') => {
+  // Formatting helpers
+  const applyTextFormat = (formatType: 'bold' | 'italic' | 'bullet' | 'arrow') => {
     const textarea = document.getElementById('post-textarea') as HTMLTextAreaElement;
     if (!textarea) return;
 
@@ -120,18 +120,16 @@ export function PostEditorModal({
     } else if (formatType === 'italic') {
       replacement = selectedText ? toUnicodeItalic(selectedText) : '𝘪𝘵𝘢𝘭𝘪𝘤 𝘵𝘦𝘅𝘵';
     } else if (formatType === 'bullet') {
-      replacement = `\n• ${selectedText || 'Key point here'}`;
+      replacement = '\n• ';
     } else if (formatType === 'arrow') {
-      replacement = `\n→ ${selectedText || 'Action step'}`;
-    } else if (formatType === 'emoji') {
-      replacement = ` 💡 `;
+      replacement = '\n→ ';
     }
 
     const newContent = content.substring(0, start) + replacement + content.substring(end);
     setContent(newContent);
   };
 
-  // AI Quick Actions (Make shorter, Make bolder, Add question, Regenerate)
+  // AI Refinement Call
   const handleAIQuickAction = async (instruction: string) => {
     setIsRefining(true);
     setStatusMessage(null);
@@ -139,75 +137,68 @@ export function PostEditorModal({
       const res = await fetch('/api/ai/refine', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, instruction }),
+        body: JSON.stringify({
+          currentContent: content,
+          instruction,
+          topic,
+        }),
       });
+
       const data = await res.json();
       if (data.success && data.refinedContent) {
         setContent(data.refinedContent);
-        setStatusMessage({ text: `Refinement applied: "${instruction}"`, type: 'success' });
+        setStatusMessage({ text: '✨ Refinement applied successfully!', type: 'success' });
+      } else {
+        setStatusMessage({ text: data.error || 'Refinement failed', type: 'error' });
       }
     } catch (e: any) {
-      setStatusMessage({ text: 'Failed to refine content', type: 'error' });
+      setStatusMessage({ text: e.message, type: 'error' });
     } finally {
       setIsRefining(false);
     }
   };
 
-  // Replace Opening Hook from suggestions
   const handleReplaceHook = (newHook: string) => {
     const lines = content.split('\n');
     lines[0] = newHook;
     setContent(lines.join('\n'));
-    setStatusMessage({ text: 'Hook replaced successfully!', type: 'success' });
+    setStatusMessage({ text: '✓ Replaced hook with viral alternative', type: 'success' });
   };
 
-  // Append Hashtag from suggestions
   const handleAppendHashtag = (tag: string) => {
     if (!content.includes(tag)) {
-      setContent((prev) => `${prev.trim()}\n${tag}`);
+      setContent(content.trim() + '\n\n' + tag);
     }
   };
 
-  // Save Draft to Database
+  // Save as Draft
   const handleSaveDraft = async () => {
     setIsSaving(true);
     setStatusMessage(null);
     try {
-      let res;
-      if (postId) {
-        res = await fetch(`/api/posts/${postId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            topic,
-            content,
-            tone,
-            imageUrl,
-            mediaType: imageUrl ? 'IMAGE' : 'NONE',
-          }),
-        });
-      } else {
-        res = await fetch('/api/posts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            topic: topic || 'LinkedIn Post',
-            content,
-            tone,
-            status: 'DRAFT',
-            imageUrl,
-            mediaType: imageUrl ? 'IMAGE' : 'NONE',
-          }),
-        });
-      }
+      const endpoint = postId ? `/api/posts/${postId}` : '/api/posts';
+      const method = postId ? 'PATCH' : 'POST';
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: topic || 'LinkedIn Post',
+          content,
+          tone,
+          status: 'DRAFT',
+          imageUrl,
+          mediaType: imageUrl ? 'IMAGE' : 'NONE',
+        }),
+      });
 
       const data = await res.json();
       if (data.success) {
-        setStatusMessage({ text: 'Draft saved successfully!', type: 'success' });
+        setStatusMessage({ text: 'Saved to drafts successfully!', type: 'success' });
         onSaved();
         setTimeout(() => onClose(), 1200);
       } else {
-        setStatusMessage({ text: data.error || 'Failed to save draft', type: 'error' });
+        setStatusMessage({ text: data.error || 'Failed to save', type: 'error' });
       }
     } catch (e: any) {
       setStatusMessage({ text: e.message, type: 'error' });
@@ -219,7 +210,7 @@ export function PostEditorModal({
   // Schedule Post
   const handleSchedulePost = async () => {
     if (!scheduledAt) {
-      setStatusMessage({ text: 'Please pick a schedule date and time', type: 'warning' });
+      setStatusMessage({ text: 'Please choose a valid schedule date/time', type: 'error' });
       return;
     }
 
@@ -310,26 +301,26 @@ export function PostEditorModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-6xl flex flex-col max-h-[94vh] overflow-hidden animate-scale-up">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      <div className="glass-panel-3d rounded-3xl shadow-2xl border border-slate-800 w-full max-w-6xl flex flex-col max-h-[94vh] overflow-hidden animate-scale-up">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-slate-900">
+            <h2 className="text-lg font-bold text-white">
               {postId ? 'Edit LinkedIn Post' : 'Fine-Tune & Polish Post'}
             </h2>
-            <span className="text-xs uppercase tracking-wider font-semibold text-[#0a66c2] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+            <span className="text-xs uppercase tracking-wider font-semibold text-cyan-300 bg-cyan-950/60 border border-cyan-500/40 px-2.5 py-0.5 rounded-full">
               {tone}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Tab switchers */}
-            <div className="flex items-center bg-slate-200/70 p-0.5 rounded-xl text-xs font-semibold text-slate-600">
+            <div className="flex items-center bg-slate-950 border border-slate-800 p-0.5 rounded-xl text-xs font-semibold text-slate-400">
               <button
                 onClick={() => setActiveTab('editor')}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
-                  activeTab === 'editor' ? 'bg-white text-slate-900 shadow-2xs' : 'hover:text-slate-900'
+                  activeTab === 'editor' ? 'bg-[#0a66c2] text-white shadow-md' : 'hover:text-white'
                 }`}
               >
                 Editor
@@ -337,26 +328,26 @@ export function PostEditorModal({
               <button
                 onClick={() => setActiveTab('suggestions')}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
-                  activeTab === 'suggestions' ? 'bg-white text-purple-700 shadow-2xs font-bold' : 'hover:text-purple-700'
+                  activeTab === 'suggestions' ? 'bg-[#0a66c2] text-white shadow-md font-bold' : 'hover:text-cyan-300'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
                 <span>AI Suggestions</span>
               </button>
               <button
                 onClick={() => setActiveTab('preview')}
                 className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
-                  activeTab === 'preview' ? 'bg-white text-[#0a66c2] shadow-2xs' : 'hover:text-[#0a66c2]'
+                  activeTab === 'preview' ? 'bg-[#0a66c2] text-white shadow-md' : 'hover:text-white'
                 }`}
               >
-                <Eye className="w-3.5 h-3.5 text-[#0a66c2]" />
+                <Eye className="w-3.5 h-3.5 text-cyan-300" />
                 <span>Feed Preview</span>
               </button>
             </div>
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -368,23 +359,23 @@ export function PostEditorModal({
           <div
             className={`px-6 py-2.5 text-xs font-medium flex items-center justify-between border-b ${
               statusMessage.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
                 : statusMessage.type === 'warning'
-                ? 'bg-amber-50 text-amber-800 border-amber-200'
-                : 'bg-red-50 text-red-800 border-red-200'
+                ? 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                : 'bg-red-950/80 text-red-300 border-red-500/40'
             }`}
           >
             <div className="flex items-center gap-2">
               {statusMessage.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               ) : (
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
               )}
               <span>{statusMessage.text}</span>
             </div>
             <button
               onClick={() => setStatusMessage(null)}
-              className="text-slate-400 hover:text-slate-600"
+              className="text-slate-400 hover:text-white"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -393,30 +384,30 @@ export function PostEditorModal({
 
         {/* Modal Main Body Grid */}
         <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left / Main Column: Editor & Formatting Toolbar (7 cols or full depending on view) */}
+          {/* Left / Main Column: Editor & Formatting Toolbar */}
           <div className={`${activeTab === 'editor' ? 'lg:col-span-7' : activeTab === 'preview' ? 'lg:col-span-6' : 'lg:col-span-6'} space-y-4`}>
             {/* Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-900/80 border border-slate-800 rounded-xl text-xs">
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => applyTextFormat('bold')}
                   title="Unicode Bold"
-                  className="p-1.5 rounded hover:bg-slate-200 text-slate-700 font-bold"
+                  className="p-1.5 rounded hover:bg-slate-800 text-slate-300 font-bold"
                 >
                   <Bold className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => applyTextFormat('italic')}
                   title="Unicode Italic"
-                  className="p-1.5 rounded hover:bg-slate-200 text-slate-700 italic"
+                  className="p-1.5 rounded hover:bg-slate-800 text-slate-300 italic"
                 >
                   <Italic className="w-3.5 h-3.5" />
                 </button>
-                <span className="w-px h-4 bg-slate-300 mx-1" />
+                <span className="w-px h-4 bg-slate-800 mx-1" />
                 <button
                   onClick={() => applyTextFormat('bullet')}
                   title="Insert Bullet"
-                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-200 text-slate-700 font-medium"
+                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-800 text-slate-300 font-medium"
                 >
                   <List className="w-3.5 h-3.5" />
                   <span>• Bullet</span>
@@ -424,7 +415,7 @@ export function PostEditorModal({
                 <button
                   onClick={() => applyTextFormat('arrow')}
                   title="Insert Arrow"
-                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-200 text-slate-700 font-medium"
+                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-800 text-slate-300 font-medium"
                 >
                   <ArrowRight className="w-3.5 h-3.5" />
                   <span>→ Step</span>
@@ -435,9 +426,9 @@ export function PostEditorModal({
                 {onOpenStudio && (
                   <button
                     onClick={() => onOpenStudio(content.slice(0, 80))}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 font-medium text-xs transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-950/60 text-purple-300 border border-purple-500/30 hover:bg-purple-900/60 font-medium text-xs transition-colors"
                   >
-                    <ImageIcon className="w-3.5 h-3.5 text-purple-600" />
+                    <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
                     <span>Create Visual Card</span>
                   </button>
                 )}
@@ -446,8 +437,8 @@ export function PostEditorModal({
                   onClick={() => setShowImageUrlInput(!showImageUrlInput)}
                   className={`flex items-center gap-1 px-2 py-1 rounded border transition-colors ${
                     imageUrl
-                      ? 'bg-blue-50 text-[#0a66c2] border-blue-200 font-medium'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-blue-950/60 text-cyan-300 border-blue-500/40 font-medium'
+                      : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
                   }`}
                 >
                   <span>{imageUrl ? 'Image Attached' : 'Attach Image'}</span>
@@ -457,13 +448,13 @@ export function PostEditorModal({
 
             {/* Image Drawer */}
             {showImageUrlInput && (
-              <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-2 text-xs">
-                <div className="flex items-center justify-between font-semibold text-purple-900">
+              <div className="p-3 bg-purple-950/40 border border-purple-500/30 rounded-xl space-y-2 text-xs">
+                <div className="flex items-center justify-between font-semibold text-purple-300">
                   <span>Attached Image URL</span>
                   {imageUrl && (
                     <button
                       onClick={() => setImageUrl(null)}
-                      className="text-red-600 hover:underline"
+                      className="text-red-400 hover:underline"
                     >
                       Remove
                     </button>
@@ -475,7 +466,7 @@ export function PostEditorModal({
                     placeholder="Paste Image URL..."
                     value={customImageUrl}
                     onChange={(e) => setCustomImageUrl(e.target.value)}
-                    className="flex-1 px-3 py-1.5 rounded-lg border border-purple-200 bg-white text-xs"
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-white text-xs"
                   />
                   <button
                     onClick={() => {
@@ -496,12 +487,12 @@ export function PostEditorModal({
             {/* Textarea with See-More Cutoff Line Overlay */}
             <div className="relative space-y-1">
               {/* LinkedIn Cutoff Indicator Bar */}
-              <div className="flex items-center justify-between text-[11px] px-1 font-medium text-slate-500">
+              <div className="flex items-center justify-between text-[11px] px-1 font-medium text-slate-400">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#0a66c2]" />
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                   Above-the-fold Hook ({Math.min(characterCount, seeMoreCutoffIndex)} / ~210 chars)
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-500">
                   Visible in feed before user clicks &ldquo;...see more&rdquo;
                 </span>
               </div>
@@ -513,10 +504,10 @@ export function PostEditorModal({
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Draft your LinkedIn post here..."
-                  className={`w-full p-4 rounded-2xl border font-sans text-sm leading-relaxed text-slate-900 bg-white focus:outline-hidden focus:ring-2 transition-all resize-y ${
+                  className={`w-full p-4 rounded-2xl border font-sans text-sm leading-relaxed text-white bg-slate-900/90 focus:outline-hidden focus:ring-2 transition-all resize-y shadow-inner ${
                     isOverLimit
-                      ? 'border-red-400 focus:ring-red-200'
-                      : 'border-slate-200 focus:ring-blue-100 focus:border-[#0a66c2]'
+                      ? 'border-red-500/80 focus:ring-red-500/40'
+                      : 'border-slate-800 focus:ring-cyan-500/30 focus:border-cyan-400'
                   }`}
                 />
               </div>
@@ -526,16 +517,16 @@ export function PostEditorModal({
                 <span
                   className={`font-mono font-semibold ${
                     isOverLimit
-                      ? 'text-red-600'
+                      ? 'text-red-400'
                       : isNearLimit
-                      ? 'text-amber-600'
-                      : 'text-slate-400'
+                      ? 'text-amber-400'
+                      : 'text-slate-500'
                   }`}
                 >
                   {characterCount} / 3,000 chars
                 </span>
                 {isOverLimit && (
-                  <span className="text-red-600 font-bold">
+                  <span className="text-red-400 font-bold">
                     Exceeds LinkedIn 3,000 limit!
                   </span>
                 )}
@@ -543,15 +534,15 @@ export function PostEditorModal({
             </div>
 
             {/* Quick Action Re-Prompt Buttons */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+            <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-2xl space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                <span className="font-bold text-slate-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                   Quick AI Re-Prompt Actions:
                 </span>
                 {isRefining && (
-                  <span className="text-purple-600 flex items-center gap-1 font-semibold">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Polishing...
+                  <span className="text-cyan-300 flex items-center gap-1 font-semibold">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Polishing in 3D...
                   </span>
                 )}
               </div>
@@ -561,9 +552,9 @@ export function PostEditorModal({
                   type="button"
                   disabled={isRefining}
                   onClick={() => handleAIQuickAction('Make this post 30% shorter and punchier')}
-                  className="p-2 rounded-xl bg-white hover:bg-purple-50 hover:text-purple-700 border border-slate-200 text-xs font-semibold text-slate-700 transition-all flex items-center justify-center gap-1 shadow-2xs disabled:opacity-50"
+                  className="p-2 rounded-xl btn-3d-glass text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  <Scissors className="w-3 h-3 text-purple-500" />
+                  <Scissors className="w-3 h-3 text-cyan-400" />
                   <span>Make shorter</span>
                 </button>
 
@@ -571,9 +562,9 @@ export function PostEditorModal({
                   type="button"
                   disabled={isRefining}
                   onClick={() => handleAIQuickAction('Make the tone bolder, contrarian, and disruptive')}
-                  className="p-2 rounded-xl bg-white hover:bg-red-50 hover:text-red-700 border border-slate-200 text-xs font-semibold text-slate-700 transition-all flex items-center justify-center gap-1 shadow-2xs disabled:opacity-50"
+                  className="p-2 rounded-xl btn-3d-glass text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  <Flame className="w-3 h-3 text-red-500" />
+                  <Flame className="w-3 h-3 text-red-400" />
                   <span>Make bolder</span>
                 </button>
 
@@ -581,9 +572,9 @@ export function PostEditorModal({
                   type="button"
                   disabled={isRefining}
                   onClick={() => handleAIQuickAction('Add a high-engagement, open-ended question at the very end to spark comments')}
-                  className="p-2 rounded-xl bg-white hover:bg-blue-50 hover:text-[#0a66c2] border border-slate-200 text-xs font-semibold text-slate-700 transition-all flex items-center justify-center gap-1 shadow-2xs disabled:opacity-50"
+                  className="p-2 rounded-xl btn-3d-glass text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  <HelpCircle className="w-3 h-3 text-[#0a66c2]" />
+                  <HelpCircle className="w-3 h-3 text-cyan-400" />
                   <span>Add question</span>
                 </button>
 
@@ -591,9 +582,9 @@ export function PostEditorModal({
                   type="button"
                   disabled={isRefining}
                   onClick={() => handleAIQuickAction('Regenerate and completely fresh rewrite this draft with maximum viral hooks')}
-                  className="p-2 rounded-xl bg-white hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 text-xs font-semibold text-slate-700 transition-all flex items-center justify-center gap-1 shadow-2xs disabled:opacity-50"
+                  className="p-2 rounded-xl btn-3d-glass text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  <Zap className="w-3 h-3 text-emerald-500" />
+                  <Zap className="w-3 h-3 text-yellow-400" />
                   <span>Regenerate</span>
                 </button>
               </div>
@@ -601,8 +592,8 @@ export function PostEditorModal({
 
             {/* Schedule Input Drawer */}
             {showScheduleInput && (
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-[#0a66c2] block">
+              <div className="p-4 bg-blue-950/40 border border-blue-500/30 rounded-2xl space-y-3">
+                <span className="text-xs font-bold text-cyan-300 block">
                   Select Publishing Date & Time
                 </span>
                 <div className="flex items-center gap-3">
@@ -610,12 +601,12 @@ export function PostEditorModal({
                     type="datetime-local"
                     value={scheduledAt}
                     onChange={(e) => setScheduledAt(e.target.value)}
-                    className="px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium text-slate-800"
+                    className="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-medium text-white"
                   />
                   <button
                     onClick={handleSchedulePost}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-[#0a66c2] text-white rounded-xl text-xs font-semibold hover:bg-[#004182] transition-colors disabled:opacity-50"
+                    className="btn-3d-primary px-4 py-2 text-white rounded-xl text-xs font-semibold disabled:opacity-50"
                   >
                     {isSaving ? 'Scheduling...' : 'Confirm Schedule'}
                   </button>
@@ -641,10 +632,10 @@ export function PostEditorModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div className="px-6 py-4 bg-slate-900/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+            className="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 transition-colors"
           >
             Cancel
           </button>
@@ -653,15 +644,15 @@ export function PostEditorModal({
             <button
               onClick={handleSaveDraft}
               disabled={isSaving || isPublishing}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-800 transition-all shadow-2xs disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-all shadow-sm disabled:opacity-50"
             >
-              <Bookmark className="w-3.5 h-3.5 text-slate-500" />
+              <Bookmark className="w-3.5 h-3.5 text-slate-400" />
               <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
             </button>
 
             <button
               onClick={() => setShowScheduleInput(!showScheduleInput)}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-xs font-semibold text-[#0a66c2] transition-all shadow-2xs"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-cyan-500/30 bg-blue-950/60 hover:bg-blue-900/60 text-xs font-semibold text-cyan-300 transition-all shadow-sm"
             >
               <Calendar className="w-3.5 h-3.5" />
               <span>Schedule</span>
@@ -672,7 +663,7 @@ export function PostEditorModal({
                 const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
                 window.open(shareUrl, '_blank', 'noopener,noreferrer');
               }}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-xs font-semibold text-[#0a66c2] transition-all shadow-2xs"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-cyan-500/30 bg-blue-950/60 hover:bg-blue-900/60 text-xs font-semibold text-cyan-300 transition-all shadow-sm"
               title="Open directly in LinkedIn Composer"
             >
               <LinkedinIcon className="w-3.5 h-3.5" />
@@ -682,12 +673,12 @@ export function PostEditorModal({
             <button
               onClick={handlePublishNow}
               disabled={isPublishing || isSaving || isOverLimit}
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0a66c2] hover:bg-[#004182] text-white text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              className="btn-3d-primary flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-white text-xs font-bold shadow-md active:scale-95 disabled:opacity-50"
             >
               {isPublishing ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-3.5 h-3.5 text-cyan-200" />
               )}
               <span>{isPublishing ? 'Publishing...' : '1-Click Direct Post'}</span>
             </button>

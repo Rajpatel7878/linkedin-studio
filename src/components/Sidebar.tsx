@@ -84,18 +84,23 @@ export function Sidebar() {
   if (isMarketingPage) return null;
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 z-30 shadow-xs">
+    <aside className="w-64 bg-[#0d121f] border-r border-slate-800/80 flex flex-col h-screen sticky top-0 z-30 shadow-2xl">
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
         <Link href="/generator" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-[#0a66c2] flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0a66c2] to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
             <LinkedinIcon className="w-6 h-6" />
           </div>
           <div>
-            <span className="font-bold text-slate-900 text-base leading-tight block">
-              LinkedIn Studio
-            </span>
-            <span className="text-xs text-slate-500 font-medium">SaaS Platform</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-white text-base leading-tight block">
+                LinkedIn Studio
+              </span>
+              <span className="text-[9px] uppercase font-mono font-black bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-1 py-0.2 rounded">
+                3D
+              </span>
+            </div>
+            <span className="text-xs text-slate-400 font-medium">Dark Creator Studio</span>
           </div>
         </Link>
       </div>
@@ -104,7 +109,7 @@ export function Sidebar() {
       <div className="p-4 pb-2">
         <Link
           href="/generator"
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0a66c2] hover:bg-[#004182] text-white font-medium text-sm shadow-sm transition-all active:scale-[0.98]"
+          className="w-full btn-3d-primary flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white font-bold text-xs shadow-md active:scale-[0.98]"
         >
           <PlusCircle className="w-4 h-4" />
           <span>New Post Draft</span>
@@ -112,8 +117,8 @@ export function Sidebar() {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
-        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">
+      <nav className="flex-1 px-3 py-3 space-y-1.5 overflow-y-auto">
+        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2">
           Studio Workflows
         </div>
         {NAV_ITEMS.map((item) => {
@@ -124,18 +129,18 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                 isActive
-                  ? 'bg-blue-50 text-[#0a66c2] font-semibold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-blue-600/15 text-cyan-400 border border-blue-500/30 shadow-lg shadow-blue-900/20 font-bold'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[#0a66c2]' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-md bg-blue-100 text-[#0a66c2]">
+                <span className="text-[9px] uppercase font-mono font-black px-1.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                   {item.badge}
                 </span>
               )}
@@ -145,20 +150,20 @@ export function Sidebar() {
       </nav>
 
       {/* User Account & Plan Banner */}
-      <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2">
+      <div className="p-3 border-t border-slate-800/80 bg-[#090d16] space-y-2">
         {plan === 'free' && (
-          <div className="p-3 bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl space-y-2 shadow-sm">
+          <div className="p-3 bg-gradient-to-r from-blue-950 to-indigo-950 border border-blue-800/40 text-white rounded-2xl space-y-2 shadow-lg">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-blue-200">Free Tier</span>
-              <span className="text-[10px] font-semibold bg-white/20 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-cyan-300">Free Tier</span>
+              <span className="text-[10px] font-semibold bg-white/10 px-2 py-0.5 rounded-full text-slate-300">
                 15 Posts/Mo
               </span>
             </div>
             <button
               onClick={() => setIsUpgradeOpen(true)}
-              className="w-full py-1.5 px-2.5 rounded-xl bg-white text-[#0a66c2] font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-blue-50 transition-colors shadow-2xs"
+              className="w-full py-1.5 px-2.5 rounded-xl btn-3d-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95"
             >
-              <Zap className="w-3.5 h-3.5" />
+              <Zap className="w-3.5 h-3.5 text-yellow-300" />
               <span>Upgrade to Pro</span>
             </button>
           </div>
@@ -171,18 +176,18 @@ export function Sidebar() {
               <img
                 src={session.user.image}
                 alt={session.user.name || 'User'}
-                className="w-8 h-8 rounded-full object-cover border border-slate-200 flex-shrink-0"
+                className="w-8 h-8 rounded-full object-cover border border-slate-700 flex-shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#0a66c2] text-white flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0a66c2] to-cyan-500 text-white flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
                 {session?.user?.name ? session.user.name[0] : 'U'}
               </div>
             )}
             <div className="min-w-0">
-              <span className="font-bold text-slate-800 block truncate text-xs">
+              <span className="font-bold text-slate-200 block truncate text-xs">
                 {session?.user?.name || 'Alex Rivera'}
               </span>
-              <span className="text-[10px] text-slate-400 capitalize font-medium">
+              <span className="text-[10px] text-cyan-400 capitalize font-medium">
                 {plan} Plan
               </span>
             </div>
@@ -191,7 +196,7 @@ export function Sidebar() {
           <button
             onClick={() => signOut({ callbackUrl: '/' })}
             title="Log Out"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
           >
             <LogOut className="w-4 h-4" />
           </button>

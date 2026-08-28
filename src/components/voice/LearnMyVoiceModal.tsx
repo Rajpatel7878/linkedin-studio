@@ -89,26 +89,26 @@ export function LearnMyVoiceModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl flex flex-col max-h-[92vh] overflow-hidden animate-scale-up">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+      <div className="glass-panel-3d rounded-3xl shadow-2xl border border-slate-800 w-full max-w-3xl flex flex-col max-h-[92vh] overflow-hidden animate-scale-up">
         {/* Modal Header */}
-        <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white flex items-start justify-between">
+        <div className="p-6 border-b border-slate-800 bg-gradient-to-r from-blue-950 via-indigo-950 to-slate-900 text-white flex items-start justify-between">
           <div className="space-y-1">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-200 text-xs font-semibold">
-              <Zap className="w-3.5 h-3.5 text-blue-300" />
+            <span className="glass-badge-3d inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-cyan-300 text-xs font-semibold">
+              <Zap className="w-3.5 h-3.5 text-yellow-300" />
               Automated AI Stylistic DNA Extractor
             </span>
             <h2 className="text-xl font-bold tracking-tight">
               Learn My Voice from Past Posts
             </h2>
-            <p className="text-xs text-blue-200/80 max-w-xl">
+            <p className="text-xs text-slate-300 max-w-xl">
               Paste in 3–5 of your real past LinkedIn posts. The AI will analyze your sentence length, emoji frequency, hook patterns, and vocabulary to clone your writing style.
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -116,7 +116,7 @@ export function LearnMyVoiceModal({
 
         {/* Error Notification */}
         {error && (
-          <div className="px-6 py-3 bg-red-50 text-red-700 text-xs font-medium border-b border-red-200">
+          <div className="px-6 py-3 bg-red-950/80 text-red-300 text-xs font-medium border-b border-red-500/40">
             {error}
           </div>
         )}
@@ -124,7 +124,7 @@ export function LearnMyVoiceModal({
         {/* Form Body */}
         <form onSubmit={handleExtractAndSave} className="flex-1 overflow-y-auto p-6 space-y-5">
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1">
+            <label className="text-xs font-bold text-slate-300 block mb-1">
               Voice Profile Name
             </label>
             <input
@@ -133,21 +133,21 @@ export function LearnMyVoiceModal({
               value={profileName}
               onChange={(e) => setProfileName(e.target.value)}
               placeholder="e.g. My Authentic Founder Tone"
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:ring-1 focus:ring-blue-500 focus:outline-hidden"
+              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-hidden focus:border-cyan-400"
             />
           </div>
 
           {/* Past Posts Inputs */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700">
+              <label className="text-xs font-bold text-slate-300">
                 Past Post Examples ({posts.length})
               </label>
               {posts.length < 8 && (
                 <button
                   type="button"
                   onClick={handleAddPostBox}
-                  className="flex items-center gap-1 text-xs font-semibold text-[#0a66c2] hover:underline"
+                  className="flex items-center gap-1 text-xs font-semibold text-cyan-400 hover:underline"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Another Example Box</span>
@@ -159,15 +159,15 @@ export function LearnMyVoiceModal({
               {posts.map((postText, idx) => (
                 <div
                   key={idx}
-                  className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-2 relative group"
+                  className="p-3.5 rounded-2xl border border-slate-800 bg-slate-900/80 space-y-2 relative group"
                 >
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold">
                     <span>Example Post #{idx + 1}</span>
                     {posts.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemovePostBox(idx)}
-                        className="text-slate-400 hover:text-red-600 p-1 rounded transition-colors"
+                        className="text-slate-500 hover:text-red-400 p-1 rounded transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -178,7 +178,7 @@ export function LearnMyVoiceModal({
                     value={postText}
                     onChange={(e) => handleUpdatePost(idx, e.target.value)}
                     placeholder="Paste the full text of a real post that performed well..."
-                    className="w-full p-2.5 text-xs rounded-xl border border-slate-200 bg-white leading-relaxed focus:outline-hidden focus:ring-1 focus:ring-blue-500 font-sans"
+                    className="w-full p-2.5 text-xs rounded-xl border border-slate-700 bg-slate-950 text-white leading-relaxed focus:outline-hidden focus:border-cyan-400 font-sans"
                   />
                 </div>
               ))}
@@ -187,11 +187,11 @@ export function LearnMyVoiceModal({
         </form>
 
         {/* Modal Footer */}
-        <div className="p-5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <div className="p-5 bg-slate-900/80 border-t border-slate-800 flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-xl"
+            className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-xl"
           >
             Cancel
           </button>
@@ -199,7 +199,7 @@ export function LearnMyVoiceModal({
           <button
             onClick={handleExtractAndSave}
             disabled={isExtracting}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0a66c2] hover:bg-[#004182] text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
+            className="btn-3d-primary flex items-center gap-2 px-6 py-2.5 rounded-xl text-white text-xs font-bold shadow-lg active:scale-95 disabled:opacity-50"
           >
             {isExtracting ? (
               <>
@@ -208,7 +208,7 @@ export function LearnMyVoiceModal({
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-cyan-200" />
                 <span>Extract & Learn My Voice Profile</span>
               </>
             )}

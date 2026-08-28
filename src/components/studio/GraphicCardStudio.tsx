@@ -265,29 +265,29 @@ export function GraphicCardStudio({
     <div className="space-y-6">
       {/* Studio Header */}
       <div>
-        <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2.5">
-          <ImageIcon className="w-6 h-6 text-[#0a66c2]" />
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
+          <ImageIcon className="w-7 h-7 text-cyan-400" />
           Visual Headline, Quote & Stat Card Studio
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-slate-400 mt-1">
           Generate branded graphic cards for your posts to stop the mobile scroll.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Form Controls (5 cols) */}
-        <div className="lg:col-span-5 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-5">
+        <div className="lg:col-span-5 glass-panel-3d rounded-3xl border border-slate-800 shadow-2xl p-6 space-y-5">
           {/* Card Type Selector (Headline / Quote / Stat Card) */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700">Card Template Type</label>
+            <label className="text-xs font-bold text-slate-300">Card Template Type</label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setCardType('headline')}
                 className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
                   cardType === 'headline'
-                    ? 'border-[#0a66c2] bg-blue-50 text-[#0a66c2] ring-1 ring-[#0a66c2]'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-cyan-500/80 bg-blue-950/60 text-cyan-300 ring-1 ring-cyan-500/80 shadow-md'
+                    : 'border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white bg-slate-900/60'
                 }`}
               >
                 <Type className="w-3.5 h-3.5" />
@@ -298,8 +298,8 @@ export function GraphicCardStudio({
                 onClick={() => setCardType('quote')}
                 className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
                   cardType === 'quote'
-                    ? 'border-[#0a66c2] bg-blue-50 text-[#0a66c2] ring-1 ring-[#0a66c2]'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-cyan-500/80 bg-blue-950/60 text-cyan-300 ring-1 ring-cyan-500/80 shadow-md'
+                    : 'border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white bg-slate-900/60'
                 }`}
               >
                 <Quote className="w-3.5 h-3.5" />
@@ -310,8 +310,8 @@ export function GraphicCardStudio({
                 onClick={() => setCardType('stat')}
                 className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
                   cardType === 'stat'
-                    ? 'border-[#0a66c2] bg-blue-50 text-[#0a66c2] ring-1 ring-[#0a66c2]'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-cyan-500/80 bg-blue-950/60 text-cyan-300 ring-1 ring-cyan-500/80 shadow-md'
+                    : 'border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white bg-slate-900/60'
                 }`}
               >
                 <BarChart2 className="w-3.5 h-3.5" />
@@ -322,8 +322,8 @@ export function GraphicCardStudio({
 
           {/* Theme Selector */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Palette className="w-3.5 h-3.5 text-[#0a66c2]" />
+            <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5 text-cyan-400" />
               Color Theme Preset
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -337,8 +337,8 @@ export function GraphicCardStudio({
                     onClick={() => setTheme(tKey)}
                     className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all text-center ${
                       isSelected
-                        ? 'border-[#0a66c2] bg-blue-50/70 text-[#0a66c2] ring-1 ring-[#0a66c2]'
-                        : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                        ? 'border-cyan-500/80 bg-blue-950/60 text-cyan-300 ring-1 ring-cyan-500/80 shadow-md'
+                        : 'border-slate-800 hover:border-slate-700 bg-slate-900/60 text-slate-400 hover:text-white'
                     }`}
                   >
                     {t.label}
@@ -350,15 +350,15 @@ export function GraphicCardStudio({
 
           {/* Aspect Ratio */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700">Aspect Ratio</label>
+            <label className="text-xs font-bold text-slate-300">Aspect Ratio</label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setAspectRatio('1:1')}
                 className={`py-1.5 rounded-xl text-xs font-semibold border ${
                   aspectRatio === '1:1'
-                    ? 'border-[#0a66c2] bg-blue-50 text-[#0a66c2]'
-                    : 'border-slate-200 text-slate-600'
+                    ? 'border-cyan-500/80 bg-blue-950/60 text-cyan-300'
+                    : 'border-slate-800 text-slate-400 bg-slate-900/60'
                 }`}
               >
                 1:1 Square
@@ -368,8 +368,8 @@ export function GraphicCardStudio({
                 onClick={() => setAspectRatio('4:5')}
                 className={`py-1.5 rounded-xl text-xs font-semibold border ${
                   aspectRatio === '4:5'
-                    ? 'border-[#0a66c2] bg-blue-50 text-[#0a66c2]'
-                    : 'border-slate-200 text-slate-600'
+                    ? 'border-cyan-500/80 bg-blue-950/60 text-cyan-300'
+                    : 'border-slate-800 text-slate-400 bg-slate-900/60'
                 }`}
               >
                 4:5 Portrait
@@ -379,8 +379,8 @@ export function GraphicCardStudio({
                 onClick={() => setAspectRatio('16:9')}
                 className={`py-1.5 rounded-xl text-xs font-semibold border ${
                   aspectRatio === '16:9'
-                    ? 'border-[#0a66c2] bg-blue-50 text-[#0a66c2]'
-                    : 'border-slate-200 text-slate-600'
+                    ? 'border-cyan-500/80 bg-blue-950/60 text-cyan-300'
+                    : 'border-slate-800 text-slate-400 bg-slate-900/60'
                 }`}
               >
                 16:9 Landscape
@@ -390,14 +390,14 @@ export function GraphicCardStudio({
 
           {/* Category Tag */}
           <div>
-            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
               Category / Topic Badge
             </label>
             <input
               type="text"
               value={categoryTag}
               onChange={(e) => setCategoryTag(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200"
+              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-hidden focus:border-cyan-400"
             />
           </div>
 
@@ -405,7 +405,7 @@ export function GraphicCardStudio({
           {cardType === 'stat' ? (
             <div className="space-y-3">
               <div>
-                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                   Big Stat / Metric
                 </label>
                 <input
@@ -413,45 +413,45 @@ export function GraphicCardStudio({
                   value={statNumber}
                   onChange={(e) => setStatNumber(e.target.value)}
                   placeholder="e.g. 84% or 3.2x"
-                  className="w-full px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200"
+                  className="w-full px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-hidden focus:border-cyan-400"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                   Stat Label / Statement
                 </label>
                 <textarea
                   rows={2}
                   value={statLabel}
                   onChange={(e) => setStatLabel(e.target.value)}
-                  className="w-full p-2.5 text-xs rounded-xl border border-slate-200"
+                  className="w-full p-2.5 text-xs rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-hidden focus:border-cyan-400"
                 />
               </div>
             </div>
           ) : (
             <div>
-              <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                 {cardType === 'quote' ? 'Quote Text' : 'Headline Text'}
               </label>
               <textarea
                 rows={3}
                 value={headline}
                 onChange={(e) => setHeadline(e.target.value)}
-                className="w-full p-3 text-xs leading-relaxed rounded-xl border border-slate-200"
+                className="w-full p-3 text-xs leading-relaxed rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-hidden focus:border-cyan-400"
               />
             </div>
           )}
 
           {/* Subtext */}
           <div>
-            <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
               Subtext / CTA Note
             </label>
             <input
               type="text"
               value={subtext}
               onChange={(e) => setSubtext(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200"
+              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-hidden focus:border-cyan-400"
             />
           </div>
         </div>

@@ -100,24 +100,24 @@ export function Navbar() {
 
   // Authenticated Dashboard Navbar
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
+    <header className="h-16 bg-[#0d121f]/90 backdrop-blur-xl border-b border-slate-800/80 px-6 flex items-center justify-between sticky top-0 z-20 shadow-xl">
       {/* Left: Quick Status */}
       <div className="flex items-center gap-4 text-xs">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-semibold text-slate-700">LinkedIn Cloud</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/50" />
+          <span className="font-bold text-slate-200">LinkedIn Cloud</span>
           {accountInfo?.isSandboxMode && (
-            <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+            <span className="text-[10px] bg-amber-500/15 text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-500/30">
               Sandbox Active
             </span>
           )}
         </div>
 
-        <span className="text-slate-300">|</span>
+        <span className="text-slate-700">|</span>
 
-        <div className="text-slate-500">
+        <div className="text-slate-400">
           Daily Quota:{' '}
-          <span className="font-mono font-bold text-slate-800">
+          <span className="font-mono font-bold text-cyan-400">
             {accountInfo?.dailyPostCount || 0}/{accountInfo?.dailyPostLimit || 25}
           </span>
         </div>
@@ -127,15 +127,15 @@ export function Navbar() {
       <div className="flex items-center gap-3">
         <Link
           href="/billing"
-          className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all"
+          className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 px-3 py-1.5 rounded-xl transition-all shadow-sm"
         >
-          <CreditCard className="w-3.5 h-3.5 text-slate-500" />
+          <CreditCard className="w-3.5 h-3.5 text-cyan-400" />
           <span className="hidden sm:inline">Subscription & Usage</span>
         </Link>
 
         <Link
           href="/settings"
-          className="flex items-center gap-1.5 p-1.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+          className="flex items-center gap-1.5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
           title="Settings"
         >
           <User className="w-4 h-4" />

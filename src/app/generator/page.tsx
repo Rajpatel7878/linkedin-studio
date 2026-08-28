@@ -133,11 +133,11 @@ function GeneratorContent() {
     <div className="space-y-8 pb-12">
       {/* Page Title Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-          <Sparkles className="w-7 h-7 text-[#0a66c2]" />
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
+          <Sparkles className="w-7 h-7 text-cyan-400" />
           AI Post Generator & Studio
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-400 mt-1">
           Turn your ideas into 3 high-converting LinkedIn post variations styled with your personal voice and proven templates.
         </p>
       </div>
@@ -155,20 +155,20 @@ function GeneratorContent() {
 
       {/* Generated Results Section */}
       {generatedDrafts.length > 0 && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        <div className="space-y-5 animate-fade-in">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Layers className="w-5 h-5 text-[#0a66c2]" />
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Layers className="w-5 h-5 text-cyan-400" />
                 Generated Post Drafts ({generatedDrafts.length})
               </h2>
-              <p className="text-xs text-slate-500">
-                Click &ldquo;Open Studio&rdquo; to test live hook scores, readability, and LinkedIn feed preview.
+              <p className="text-xs text-slate-400">
+                Click &ldquo;Edit&rdquo; to test live hook scores, readability, and LinkedIn feed preview.
               </p>
             </div>
 
             {modelUsed && (
-              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+              <span className="text-xs font-semibold text-cyan-300 bg-cyan-950/50 px-3 py-1 rounded-full border border-cyan-500/30 font-mono">
                 Engine: {modelUsed}
               </span>
             )}
@@ -211,11 +211,11 @@ function GeneratorContent() {
 
       {/* Graphic Studio Modal */}
       {isStudioOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="glass-panel-3d rounded-3xl p-6 sm:p-8 max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-700 relative">
             <button
               onClick={() => setIsStudioOpen(false)}
-              className="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-sm font-semibold px-3 py-1 rounded-lg bg-slate-100"
+              className="absolute top-6 right-6 text-slate-400 hover:text-white text-xs font-semibold px-3 py-1 rounded-lg bg-slate-800 border border-slate-700"
             >
               Close Studio
             </button>
@@ -239,7 +239,7 @@ function GeneratorContent() {
 
 export default function GeneratorPage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-slate-500">Loading Studio...</div>}>
+    <Suspense fallback={<div className="p-12 text-center text-slate-400">Loading Studio...</div>}>
       <GeneratorContent />
     </Suspense>
   );
