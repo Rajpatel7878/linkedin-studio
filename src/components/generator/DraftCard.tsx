@@ -9,8 +9,9 @@ import {
   Image as ImageIcon,
   Clock,
   CheckCircle2,
-  Eye,
+  Share2,
 } from 'lucide-react';
+import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 import { GeneratedDraftOption } from '@/types';
 
 interface DraftCardProps {
@@ -18,7 +19,6 @@ interface DraftCardProps {
   topic: string;
   onEdit: (draft: GeneratedDraftOption) => void;
   onSaveAsDraft: (draft: GeneratedDraftOption) => Promise<void>;
-  onSchedule: (draft: GeneratedDraftOption) => void;
   onOpenStudio: (headline: string) => void;
 }
 
@@ -56,6 +56,13 @@ export function DraftCard({
     }
   };
 
+  const handleDirectLinkedInPost = () => {
+    const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(
+      draft.content
+    )}`;
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const getAngleBadgeStyle = (angle: string) => {
     switch (angle) {
       case 'storytelling':
@@ -69,7 +76,6 @@ export function DraftCard({
 
   const cutoff = draft.seeMoreIndex || 210;
   const aboveFold = draft.content.slice(0, cutoff);
-  const belowFold = draft.content.slice(cutoff);
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group">
@@ -138,6 +144,15 @@ export function DraftCard({
             <ImageIcon className="w-3.5 h-3.5 text-purple-600" />
             <span className="hidden sm:inline">Graphic Card</span>
           </button>
+
+          <button
+            onClick={handleDirectLinkedInPost}
+            className="flex items-center gap-1 text-xs font-semibold text-[#0a66c2] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-2 rounded-xl transition-all shadow-2xs"
+            title="Open in LinkedIn post composer"
+          >
+            <LinkedinIcon className="w-3.5 h-3.5" />
+            <span>Post to LinkedIn</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -149,7 +164,7 @@ export function DraftCard({
             {savedSuccess ? (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-600">Draft Saved</span>
+                <span className="text-emerald-600">Saved</span>
               </>
             ) : (
               <>
@@ -164,7 +179,7 @@ export function DraftCard({
             className="flex items-center gap-1 text-xs font-bold text-white bg-[#0a66c2] hover:bg-[#004182] px-3.5 py-2 rounded-xl transition-all shadow-xs active:scale-95"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>Open Studio</span>
+            <span>Edit & Polish</span>
           </button>
         </div>
       </div>

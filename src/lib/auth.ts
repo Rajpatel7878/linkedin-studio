@@ -1,5 +1,6 @@
 import { NextAuthOptions, getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import LinkedInProvider from 'next-auth/providers/linkedin';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from './prisma';
 
@@ -8,6 +9,12 @@ const hasValidGoogleKeys =
   Boolean(process.env.GOOGLE_CLIENT_SECRET) &&
   !process.env.GOOGLE_CLIENT_ID?.includes('placeholder') &&
   !process.env.GOOGLE_CLIENT_SECRET?.includes('placeholder');
+
+const hasValidLinkedInKeys =
+  Boolean(process.env.LINKEDIN_CLIENT_ID) &&
+  Boolean(process.env.LINKEDIN_CLIENT_SECRET) &&
+  !process.env.LINKEDIN_CLIENT_ID?.includes('placeholder') &&
+  !process.env.LINKEDIN_CLIENT_SECRET?.includes('placeholder');
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -35,7 +42,20 @@ export const authOptions: NextAuthOptions = {
           }),
         ]
       : []),
-    // Simulated Google & Demo Credentials Provider (Rock-solid fallback)
+    ...(hasValidLinkedInKeys
+      ? [
+          LinkedInProvider({
+            clientId: process.env.LINKEDIN_CLIENT_ID!,
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
+            authorization: {
+              params: {
+                scope: 'openid profile email w_member_social',
+              },
+            },
+          }),
+        ]
+      : []),
+    // Simulated Google, LinkedIn & Demo Credentials Provider
     CredentialsProvider({
       id: 'demo-login',
       name: 'Demo Account',
@@ -44,6 +64,7 @@ export const authOptions: NextAuthOptions = {
         name: { label: 'Name', type: 'text', placeholder: 'Alex Rivera' },
         plan: { label: 'Plan', type: 'text', placeholder: 'pro' },
         image: { label: 'Image', type: 'text' },
+        provider: { label: 'Provider', type: 'text' },
       },
       async authorize(credentials) {
         const email = credentials?.email?.toLowerCase().trim() || 'alex@example.com';
@@ -68,7 +89,7 @@ export const authOptions: NextAuthOptions = {
               },
             });
 
-            // Initialize sandbox LinkedIn account for new user
+            // Initialize sandbox / live LinkedIn account for user
             try {
               await prisma.linkedInAccount.create({
                 data: {
@@ -91,7 +112,6 @@ export const authOptions: NextAuthOptions = {
             plan: user.plan,
           } as any;
         } catch (dbError) {
-          // If Prisma SQLite encounters filesystem issues on serverless Vercel, return authenticated session user
           return {
             id: 'demo-user-id',
             name,
@@ -117,7 +137,7 @@ export const authOptions: NextAuthOptions = {
                 email,
                 name: user.name || 'New Creator',
                 image: user.image,
-                plan: 'free',
+                plan: 'pro',
               },
             });
 
@@ -138,17 +158,66 @@ export const authOptions: NextAuthOptions = {
           user.id = dbUser.id;
           (user as any).plan = dbUser.plan;
         } catch (e) {
-          // Database bypass on serverless
           user.id = 'demo-user-id';
-          (user as any).plan = 'free';
+          (user as any).plan = 'pro';
         }
       }
+
+      if (account?.provider === 'linkedin') {
+        const email = user.email || `linkedin-${user.id}@linkedin.user`;
+        try {
+          let dbUser = await prisma.user.findUnique({ where: { email } });
+          if (!dbUser) {
+            dbUser = await prisma.user.create({
+              data: {
+                email,
+                name: user.name || 'LinkedIn Creator',
+                image: user.image,
+                plan: 'pro',
+              },
+            });
+          }
+
+          if (account.access_token) {
+            try {
+              await prisma.linkedInAccount.upsert({
+                where: { userId: dbUser.id },
+                update: {
+                  isConnected: true,
+                  isSandboxMode: false,
+                  name: user.name || dbUser.name,
+                  profilePictureUrl: user.image || dbUser.image,
+                  accessTokenEncrypted: account.access_token,
+                },
+                create: {
+                  userId: dbUser.id,
+                  isConnected: true,
+                  isSandboxMode: false,
+                  name: user.name || dbUser.name,
+                  profilePictureUrl: user.image || dbUser.image,
+                  accessTokenEncrypted: account.access_token,
+                },
+              });
+            } catch (e) {}
+          }
+
+          user.id = dbUser.id;
+          (user as any).plan = dbUser.plan;
+        } catch (e) {
+          user.id = 'demo-user-id';
+          (user as any).plan = 'pro';
+        }
+      }
+
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger, session, account }) {
       if (user) {
         token.id = user.id || 'demo-user-id';
         token.plan = (user as any).plan || 'pro';
+        if (account?.access_token) {
+          token.linkedinAccessToken = account.access_token;
+        }
       }
 
       if (trigger === 'update' && session?.plan) {

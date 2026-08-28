@@ -22,6 +22,7 @@ import {
   Flame,
   Layers,
 } from 'lucide-react';
+import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 import { LinkedInPreview } from './LinkedInPreview';
 import { AISuggestionsPanel } from './AISuggestionsPanel';
 
@@ -667,6 +668,18 @@ export function PostEditorModal({
             </button>
 
             <button
+              onClick={() => {
+                const shareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(content)}`;
+                window.open(shareUrl, '_blank', 'noopener,noreferrer');
+              }}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-xs font-semibold text-[#0a66c2] transition-all shadow-2xs"
+              title="Open directly in LinkedIn Composer"
+            >
+              <LinkedinIcon className="w-3.5 h-3.5" />
+              <span>Share to LinkedIn Web</span>
+            </button>
+
+            <button
               onClick={handlePublishNow}
               disabled={isPublishing || isSaving || isOverLimit}
               className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0a66c2] hover:bg-[#004182] text-white text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
@@ -676,7 +689,7 @@ export function PostEditorModal({
               ) : (
                 <Send className="w-3.5 h-3.5" />
               )}
-              <span>{isPublishing ? 'Publishing...' : 'Publish to LinkedIn Now'}</span>
+              <span>{isPublishing ? 'Publishing...' : '1-Click Direct Post'}</span>
             </button>
           </div>
         </div>

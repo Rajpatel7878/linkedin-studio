@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [plan, setPlan] = useState('pro');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isLinkedInLoading, setIsLinkedInLoading] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   // If already authenticated, redirect to generator
@@ -187,6 +188,24 @@ export default function LoginPage() {
               </svg>
             )}
             <span>{isGoogleLoading ? 'Connecting to Google Accounts...' : 'Continue with Google Account'}</span>
+          </button>
+
+          {/* LinkedIn Sign In Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsLinkedInLoading(true);
+              signIn('linkedin', { callbackUrl: '/generator' });
+            }}
+            disabled={isLinkedInLoading || isGoogleLoading || isLoading}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-blue-200 bg-[#0a66c2] hover:bg-[#004182] text-white font-bold text-xs shadow-xs transition-all active:scale-98 disabled:opacity-60"
+          >
+            {isLinkedInLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : (
+              <LinkedinIcon className="w-4 h-4 text-white" />
+            )}
+            <span>{isLinkedInLoading ? 'Connecting to LinkedIn...' : 'Continue with LinkedIn'}</span>
           </button>
 
           <div className="relative flex items-center justify-center">

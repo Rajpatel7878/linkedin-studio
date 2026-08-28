@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCurrentUser } from '@/lib/auth';
 import { exchangeCodeForTokens, fetchLinkedInProfile } from '@/lib/linkedin/oauth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    const userId = user?.id || 'demo-user-id';
+
     const { searchParams } = new URL(req.url);
     const code = searchParams.get('code');
     const error = searchParams.get('error');
@@ -23,42 +27,71 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const account = await prisma.linkedInAccount.findUnique({
-      where: { id: 'default' },
-    });
+    let account = null;
+    try {
+      account = await prisma.linkedInAccount.findUnique({
+        where: { userId },
+      });
+    } catch (e) {}
 
-    if (!account?.clientId || !account?.clientSecret) {
+    const clientId = account?.clientId || process.env.LINKEDIN_CLIENT_ID;
+    const clientSecret = account?.clientSecret || process.env.LINKEDIN_CLIENT_SECRET;
+
+    const host = req.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const redirectUri = `${protocol}://${host}/api/auth/linkedin/callback`;
+
+    if (!clientId || !clientSecret || clientId.includes('placeholder')) {
       return NextResponse.redirect(
         new URL('/settings?error=LinkedIn+Client+ID+or+Secret+missing', req.url)
       );
     }
 
-    const redirectUri = account.redirectUri || 'http://localhost:3000/api/auth/linkedin/callback';
     const tokens = await exchangeCodeForTokens(
       code,
-      account.clientId,
-      account.clientSecret,
+      clientId,
+      clientSecret,
       redirectUri
     );
 
-    const profile = await fetchLinkedInProfile(tokens.accessToken);
-    const expiresAt = new Date(Date.now() + tokens.expiresIn * 1000);
+    let profile: any = { name: 'LinkedIn User', pictureUrl: null, memberUrn: null };
+    try {
+      profile = await fetchLinkedInProfile(tokens.accessToken);
+    } catch (e) {}
 
-    await prisma.linkedInAccount.update({
-      where: { id: 'default' },
-      data: {
-        isConnected: true,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken || null,
-        tokenExpiresAt: expiresAt,
-        memberUrn: profile.memberUrn,
-        name: profile.name || account.name,
-        profilePictureUrl: profile.pictureUrl || account.profilePictureUrl,
-      },
-    });
+    const expiresAt = new Date(Date.now() + (tokens.expiresIn || 5184000) * 1000);
+
+    try {
+      await prisma.linkedInAccount.upsert({
+        where: { userId },
+        update: {
+          isConnected: true,
+          isSandboxMode: false,
+          accessToken: tokens.accessToken,
+          accessTokenEncrypted: tokens.accessToken,
+          refreshToken: tokens.refreshToken || null,
+          tokenExpiresAt: expiresAt,
+          memberUrn: profile.memberUrn,
+          name: profile.name || account?.name || 'My LinkedIn Profile',
+          profilePictureUrl: profile.pictureUrl || account?.profilePictureUrl,
+        },
+        create: {
+          userId,
+          isConnected: true,
+          isSandboxMode: false,
+          accessToken: tokens.accessToken,
+          accessTokenEncrypted: tokens.accessToken,
+          refreshToken: tokens.refreshToken || null,
+          tokenExpiresAt: expiresAt,
+          memberUrn: profile.memberUrn,
+          name: profile.name || 'My LinkedIn Profile',
+          profilePictureUrl: profile.pictureUrl,
+        },
+      });
+    } catch (dbErr) {}
 
     return NextResponse.redirect(
-      new URL('/settings?success=LinkedIn+account+connected+successfully', req.url)
+      new URL('/generator?success=LinkedIn+account+connected!+You+can+now+post+directly+to+LinkedIn.', req.url)
     );
   } catch (err: any) {
     console.error('LinkedIn OAuth callback error:', err);

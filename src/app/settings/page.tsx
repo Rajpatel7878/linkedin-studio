@@ -397,6 +397,26 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* 1-Click Connect LinkedIn Account Banner */}
+        <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <span className="font-bold text-xs text-slate-900 block">
+              {account?.isConnected ? 'LinkedIn Account Connected ✅' : 'Connect LinkedIn Account'}
+            </span>
+            <p className="text-[11px] text-slate-500">
+              Authorize LinkedIn Studio to publish and schedule posts directly to your profile.
+            </p>
+          </div>
+
+          <a
+            href="/api/auth/linkedin/authorize"
+            className="px-4 py-2 rounded-xl bg-[#0a66c2] hover:bg-[#004182] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs active:scale-95"
+          >
+            <LinkedinIcon className="w-3.5 h-3.5" />
+            <span>{account?.isConnected ? 'Reconnect LinkedIn Profile' : 'Connect LinkedIn Profile'}</span>
+          </a>
+        </div>
+
         <form onSubmit={handleSaveAccountProfile} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
