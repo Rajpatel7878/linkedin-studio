@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { signIn, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Script from 'next/script';
 import {
   Sparkles,
   Zap,
@@ -14,15 +16,97 @@ import {
 } from 'lucide-react';
 import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 
+const GOOGLE_CLIENT_ID = '149007414470-k83on3ir5dtfpbvtbvq24lvgn6u5qeu8.apps.googleusercontent.com';
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('alex@example.com');
-  const [name, setName] = useState('Alex Rivera');
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [email, setEmail] = useState('creator@example.com');
+  const [name, setName] = useState('Creator');
   const [plan, setPlan] = useState('pro');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  const handleGoogleSignIn = () => {
+  // If already authenticated, redirect to generator
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/generator');
+    }
+  }, [status, router]);
+
+  // Handle Google Identity Services (GSI) Client-Side Response
+  const handleGoogleCredentialResponse = async (response: any) => {
     setIsGoogleLoading(true);
+    try {
+      if (response?.credential) {
+        // Decode Google JWT payload
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const googleUser = JSON.parse(jsonPayload);
+
+        // Sign into NextAuth session with real Google name, email, and avatar
+        await signIn('demo-login', {
+          email: googleUser.email,
+          name: googleUser.name,
+          plan: 'pro',
+          image: googleUser.picture,
+          callbackUrl: '/generator',
+          redirect: false,
+        });
+
+        window.location.href = '/generator';
+      }
+    } catch (e) {
+      console.error('Google One Tap error:', e);
+      signIn('google', { callbackUrl: '/generator' });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  // Initialize Google Identity Services
+  const initializeGoogleGSI = () => {
+    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+      try {
+        (window as any).google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        // Render official Google button into the container
+        if (googleBtnRef.current) {
+          googleBtnRef.current.innerHTML = '';
+          (window as any).google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: 'outline',
+            size: 'large',
+            type: 'standard',
+            shape: 'rectangular',
+            text: 'continue_with',
+            logo_alignment: 'left',
+            width: 380,
+          });
+        }
+
+        // Trigger Google One Tap prompt
+        (window as any).google.accounts.id.prompt();
+      } catch (err) {
+        console.error('Google GSI init error:', err);
+      }
+    }
+  };
+
+  const handleManualGoogleClick = () => {
+    setIsGoogleLoading(true);
+    // Standard Google OAuth 2.0 full redirect
     signIn('google', { callbackUrl: '/generator' });
   };
 
@@ -45,6 +129,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Load Google Identity Services SDK */}
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={initializeGoogleGSI}
+      />
+
       <div className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 animate-scale-up">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -55,15 +146,21 @@ export default function LoginPage() {
             Welcome to LinkedIn Studio
           </h2>
           <p className="text-xs text-slate-500">
-            Sign in to start creating viral, high-converting LinkedIn content.
+            Sign in with your Google account to start creating viral LinkedIn content.
           </p>
         </div>
 
-        {/* Google Sign In Button */}
+        {/* Real-time Google Sign In Section */}
         <div className="space-y-4">
+          {/* Official Google GSI Rendered Button Container */}
+          <div className="flex justify-center w-full min-h-[44px]">
+            <div ref={googleBtnRef} className="w-full flex justify-center" />
+          </div>
+
+          {/* Backup Google OAuth Button */}
           <button
             type="button"
-            onClick={handleGoogleSignIn}
+            onClick={handleManualGoogleClick}
             disabled={isGoogleLoading || isLoading}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-all active:scale-98 disabled:opacity-60"
           >
@@ -89,7 +186,7 @@ export default function LoginPage() {
                 />
               </svg>
             )}
-            <span>{isGoogleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
+            <span>{isGoogleLoading ? 'Connecting to Google Accounts...' : 'Continue with Google Account'}</span>
           </button>
 
           <div className="relative flex items-center justify-center">

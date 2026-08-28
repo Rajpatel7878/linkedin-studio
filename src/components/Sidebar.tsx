@@ -167,9 +167,17 @@ export function Sidebar() {
         {/* User Card */}
         <div className="flex items-center justify-between px-2 py-1.5 rounded-xl text-xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-[#0a66c2] text-white flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
-              {session?.user?.name ? session.user.name[0] : 'U'}
-            </div>
+            {session?.user?.image ? (
+              <img
+                src={session.user.image}
+                alt={session.user.name || 'User'}
+                className="w-8 h-8 rounded-full object-cover border border-slate-200 flex-shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[#0a66c2] text-white flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
+                {session?.user?.name ? session.user.name[0] : 'U'}
+              </div>
+            )}
             <div className="min-w-0">
               <span className="font-bold text-slate-800 block truncate text-xs">
                 {session?.user?.name || 'Alex Rivera'}
