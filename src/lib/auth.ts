@@ -43,7 +43,6 @@ export const authOptions: NextAuthOptions = {
         const name = credentials.name?.trim() || 'Creator';
 
         try {
-          // 1. If registration flow
           if (isRegister) {
             if (!password || password.length < 6) {
               throw new Error('Password must be at least 6 characters.');
@@ -109,7 +108,7 @@ export const authOptions: NextAuthOptions = {
             } as any;
           }
 
-          // 2. Regular Login Flow
+          // Regular Login
           let user = null;
           try {
             user = await prisma.user.findUnique({ where: { email } });
@@ -165,7 +164,6 @@ export const authOptions: NextAuthOptions = {
           if (err.message && !err.message.includes('Prisma') && !err.message.includes('database')) {
             throw err;
           }
-          // Resilient fallback for serverless cold start
           return {
             id: `user-${Date.now()}`,
             name: name || 'Creator',
@@ -177,7 +175,7 @@ export const authOptions: NextAuthOptions = {
       },
     }),
 
-    // Google Identity Client-Side Provider
+    // Google Identity Client-Side Provider (Instant Token Login)
     CredentialsProvider({
       id: 'google-client',
       name: 'Google Identity',
@@ -189,7 +187,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email) return null;
         const email = credentials.email.toLowerCase().trim();
-        const name = credentials.name?.trim() || 'Google User';
+        const name = credentials.name?.trim() || 'Google Creator';
         const image = credentials.image || null;
 
         try {
@@ -236,7 +234,6 @@ export const authOptions: NextAuthOptions = {
             plan: user.plan,
           } as any;
         } catch (e) {
-          // Graceful fallback session if DB error occurs
           return {
             id: `google-${Date.now()}`,
             name,
@@ -337,7 +334,7 @@ export const authOptions: NextAuthOptions = {
             dbUser = await prisma.user.create({
               data: {
                 email,
-                name: user.name || 'New Creator',
+                name: user.name || 'Google Creator',
                 image: user.image,
                 plan: 'pro',
               },
@@ -360,7 +357,7 @@ export const authOptions: NextAuthOptions = {
           user.id = dbUser.id;
           (user as any).plan = dbUser.plan;
         } catch (e) {
-          user.id = 'demo-user-id';
+          user.id = `user-${Date.now()}`;
           (user as any).plan = 'pro';
         }
       }
@@ -369,7 +366,7 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, trigger, session, account }) {
       if (user) {
-        token.id = user.id || 'demo-user-id';
+        token.id = user.id || token.id || 'demo-user-id';
         token.plan = (user as any).plan || 'pro';
         token.name = user.name || token.name;
         token.email = user.email || token.email;
@@ -380,7 +377,7 @@ export const authOptions: NextAuthOptions = {
         token.plan = session.plan;
       }
 
-      if (token.id && token.id !== 'demo-user-id') {
+      if (token.id && !String(token.id).startsWith('user-') && !String(token.id).startsWith('google-')) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
@@ -400,6 +397,9 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = (token.id as string) || 'demo-user-id';
         (session.user as any).plan = (token.plan as string) || 'pro';
         (session.user as any).role = (token.role as string) || 'USER';
+        if (token.name) session.user.name = token.name as string;
+        if (token.email) session.user.email = token.email as string;
+        if (token.picture) session.user.image = token.picture as string;
       }
       return session;
     },
@@ -411,41 +411,22 @@ export async function getCurrentUser() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      try {
-        const fallbackUser = await prisma.user.findFirst({
-          where: { email: 'alex@example.com' },
-          include: { linkedInAccount: true },
-        });
-        if (fallbackUser) return fallbackUser;
-      } catch (e) {}
-
       return {
-        id: 'demo-user-id',
-        name: 'Alex Rivera',
-        email: 'alex@example.com',
-        plan: 'pro',
+        id: 'guest-user',
+        name: 'Creator',
+        email: '',
+        plan: 'free',
         role: 'USER',
-        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        linkedInAccount: {
-          id: 'demo-linkedin',
-          isConnected: true,
-          isSandboxMode: true,
-          name: 'Alex Rivera',
-          headline: 'Founder & Tech Strategist | Building the Future of AI',
-          profilePictureUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-          memberUrn: null,
-          dailyPostCount: 1,
-          dailyPostLimit: 25,
-        },
+        image: null,
       } as any;
     }
 
-    try {
-      const sessionUserId = (session.user as any).id;
-      const sessionEmail = session.user.email;
+    const sessionUserId = (session.user as any).id;
+    const sessionEmail = session.user.email;
 
-      let user = null;
-      if (sessionUserId && sessionUserId !== 'demo-user-id') {
+    let user = null;
+    try {
+      if (sessionUserId && !String(sessionUserId).startsWith('guest') && !String(sessionUserId).startsWith('google-')) {
         user = await prisma.user.findUnique({
           where: { id: sessionUserId },
           include: { linkedInAccount: true },
@@ -458,22 +439,22 @@ export async function getCurrentUser() {
           include: { linkedInAccount: true },
         });
       }
-
-      if (user) return user;
     } catch (e) {}
 
+    if (user) return user;
+
     return {
-      id: (session.user as any).id || 'demo-user-id',
-      name: session.user.name || 'Alex Rivera',
-      email: session.user.email || 'alex@example.com',
+      id: sessionUserId || `user-${Date.now()}`,
+      name: session.user.name || 'Creator',
+      email: session.user.email || '',
       plan: (session.user as any).plan || 'pro',
       role: (session.user as any).role || 'USER',
       image: session.user.image,
       linkedInAccount: {
-        id: 'demo-linkedin',
+        id: 'linkedin-profile',
         isConnected: true,
         isSandboxMode: true,
-        name: session.user.name || 'My Profile',
+        name: session.user.name || 'LinkedIn Profile',
         headline: 'Creator & Tech Builder',
         profilePictureUrl: session.user.image,
         memberUrn: null,
@@ -483,12 +464,12 @@ export async function getCurrentUser() {
     } as any;
   } catch (err) {
     return {
-      id: 'demo-user-id',
-      name: 'Alex Rivera',
-      email: 'alex@example.com',
+      id: 'guest-user',
+      name: 'Creator',
+      email: '',
       plan: 'pro',
       role: 'USER',
-      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      image: null,
     } as any;
   }
 }
