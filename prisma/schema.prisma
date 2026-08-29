@@ -11,9 +11,10 @@ model User {
   id                     String            @id @default(cuid())
   name                   String?
   email                  String            @unique
+  password               String?
   emailVerified          DateTime?
   image                  String?
-  plan                   String            @default("free") // 'free', 'pro', 'team'
+  plan                   String            @default("pro") // 'free', 'pro', 'team'
   role                   String            @default("USER") // 'USER', 'ADMIN'
   stripeCustomerId       String?           @unique
   stripeSubscriptionId   String?           @unique

@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import LinkedInProvider from 'next-auth/providers/linkedin';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from './prisma';
+import { verifyPassword, hashPassword } from './password';
 
 const hasValidGoogleKeys =
   Boolean(process.env.GOOGLE_CLIENT_ID) &&
@@ -27,6 +28,147 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   providers: [
+    // Standard Email & Password Credentials Provider
+    CredentialsProvider({
+      id: 'credentials',
+      name: 'Email and Password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+        name: { label: 'Name', type: 'text' },
+        isRegister: { label: 'IsRegister', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email) {
+          throw new Error('Email is required.');
+        }
+
+        const email = credentials.email.toLowerCase().trim();
+        const password = credentials.password || '';
+        const isRegister = credentials.isRegister === 'true';
+        const name = credentials.name?.trim() || 'Creator';
+
+        // 1. If registration flow
+        if (isRegister) {
+          if (!password || password.length < 6) {
+            throw new Error('Password must be at least 6 characters.');
+          }
+
+          let existingUser = await prisma.user.findUnique({
+            where: { email },
+          });
+
+          if (existingUser && existingUser.password) {
+            throw new Error('An account with this email already exists. Please sign in.');
+          }
+
+          const hashedPassword = hashPassword(password);
+
+          if (existingUser) {
+            existingUser = await prisma.user.update({
+              where: { id: existingUser.id },
+              data: { name: name || existingUser.name, password: hashedPassword },
+            });
+            return {
+              id: existingUser.id,
+              name: existingUser.name,
+              email: existingUser.email,
+              image: existingUser.image,
+              plan: existingUser.plan,
+            } as any;
+          }
+
+          const newUser = await prisma.user.create({
+            data: {
+              email,
+              name,
+              password: hashedPassword,
+              plan: 'pro',
+            },
+          });
+
+          try {
+            await prisma.linkedInAccount.create({
+              data: {
+                userId: newUser.id,
+                name: newUser.name || 'LinkedIn Profile',
+                headline: 'Creator & Tech Builder',
+                isSandboxMode: true,
+                isConnected: true,
+              },
+            });
+          } catch (e) {}
+
+          return {
+            id: newUser.id,
+            name: newUser.name,
+            email: newUser.email,
+            image: newUser.image,
+            plan: newUser.plan,
+          } as any;
+        }
+
+        // 2. Regular Login Flow
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!user) {
+          // If no user exists yet and password is provided, auto-create account for seamless UX
+          if (password && password.length >= 6) {
+            const hashedPassword = hashPassword(password);
+            const newUser = await prisma.user.create({
+              data: {
+                email,
+                name: name || 'Creator',
+                password: hashedPassword,
+                plan: 'pro',
+              },
+            });
+
+            try {
+              await prisma.linkedInAccount.create({
+                data: {
+                  userId: newUser.id,
+                  name: newUser.name || 'LinkedIn Profile',
+                  headline: 'Creator & Tech Builder',
+                  isSandboxMode: true,
+                  isConnected: true,
+                },
+              });
+            } catch (e) {}
+
+            return {
+              id: newUser.id,
+              name: newUser.name,
+              email: newUser.email,
+              image: newUser.image,
+              plan: newUser.plan,
+            } as any;
+          }
+
+          throw new Error('No account found with this email. Please register first.');
+        }
+
+        // If user has a password, verify it
+        if (user.password) {
+          const isValid = verifyPassword(password, user.password);
+          if (!isValid) {
+            throw new Error('Incorrect password. Please try again.');
+          }
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          plan: user.plan,
+        } as any;
+      },
+    }),
+
+    // Google OAuth 2.0 Provider
     ...(hasValidGoogleKeys
       ? [
           GoogleProvider({
@@ -42,6 +184,8 @@ export const authOptions: NextAuthOptions = {
           }),
         ]
       : []),
+
+    // LinkedIn OAuth 2.0 Provider
     ...(hasValidLinkedInKeys
       ? [
           LinkedInProvider({
@@ -55,6 +199,66 @@ export const authOptions: NextAuthOptions = {
           }),
         ]
       : []),
+
+    // Instant Google ID Token & Client-Side Provider (Bypasses redirect URI issues)
+    CredentialsProvider({
+      id: 'google-client',
+      name: 'Google Identity',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        name: { label: 'Name', type: 'text' },
+        image: { label: 'Image', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email) return null;
+        const email = credentials.email.toLowerCase().trim();
+        const name = credentials.name?.trim() || 'Google User';
+        const image = credentials.image || null;
+
+        let user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email,
+              name,
+              image,
+              plan: 'pro',
+            },
+          });
+
+          try {
+            await prisma.linkedInAccount.create({
+              data: {
+                userId: user.id,
+                name: user.name || 'LinkedIn Profile',
+                headline: 'Creator & Tech Builder',
+                isSandboxMode: true,
+                isConnected: true,
+                profilePictureUrl: user.image,
+              },
+            });
+          } catch (e) {}
+        } else if (image && !user.image) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { image },
+          });
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          plan: user.plan,
+        } as any;
+      },
+    }),
+
+    // Direct LinkedIn 1-Click Provider
     CredentialsProvider({
       id: 'linkedin-direct',
       name: 'LinkedIn Account',
@@ -64,122 +268,47 @@ export const authOptions: NextAuthOptions = {
         image: { label: 'Image', type: 'text' },
       },
       async authorize(credentials) {
-        const email = credentials?.email?.toLowerCase().trim() || 'linkedin.creator@example.com';
+        const email = credentials?.email?.toLowerCase().trim() || 'linkedin.creator@linkedin.com';
         const name = credentials?.name?.trim() || 'LinkedIn Creator';
         const image =
           credentials?.image ||
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
 
-        try {
-          let user = await prisma.user.findUnique({
-            where: { email },
+        let user = await prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email,
+              name,
+              plan: 'pro',
+              image,
+            },
           });
 
-          if (!user) {
-            user = await prisma.user.create({
+          try {
+            await prisma.linkedInAccount.create({
               data: {
-                email,
-                name,
-                plan: 'pro',
-                image,
+                userId: user.id,
+                name: user.name || 'LinkedIn Profile',
+                headline: 'Founder & Creator | Building on LinkedIn',
+                isSandboxMode: true,
+                isConnected: true,
+                profilePictureUrl: user.image,
               },
             });
-
-            try {
-              await prisma.linkedInAccount.create({
-                data: {
-                  userId: user.id,
-                  name: user.name || 'LinkedIn Profile',
-                  headline: 'Founder & Creator | Building on LinkedIn',
-                  isSandboxMode: true,
-                  isConnected: true,
-                  profilePictureUrl: user.image,
-                },
-              });
-            } catch (e) {}
-          }
-
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            plan: user.plan,
-          } as any;
-        } catch (dbError) {
-          return {
-            id: 'demo-user-id',
-            name,
-            email,
-            image,
-            plan: 'pro',
-          } as any;
+          } catch (e) {}
         }
-      },
-    }),
-    CredentialsProvider({
-      id: 'demo-login',
-      name: 'Demo Account',
-      credentials: {
-        email: { label: 'Email', type: 'email', placeholder: 'alex@example.com' },
-        name: { label: 'Name', type: 'text', placeholder: 'Alex Rivera' },
-        plan: { label: 'Plan', type: 'text', placeholder: 'pro' },
-        image: { label: 'Image', type: 'text' },
-        provider: { label: 'Provider', type: 'text' },
-      },
-      async authorize(credentials) {
-        const email = credentials?.email?.toLowerCase().trim() || 'alex@example.com';
-        const name = credentials?.name?.trim() || 'Alex Rivera';
-        const plan = credentials?.plan || 'pro';
-        const image =
-          credentials?.image ||
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
 
-        try {
-          let user = await prisma.user.findUnique({
-            where: { email },
-          });
-
-          if (!user) {
-            user = await prisma.user.create({
-              data: {
-                email,
-                name,
-                plan,
-                image,
-              },
-            });
-
-            try {
-              await prisma.linkedInAccount.create({
-                data: {
-                  userId: user.id,
-                  name: user.name || 'My LinkedIn Profile',
-                  headline: 'Founder & Creator | Building in Public',
-                  isSandboxMode: true,
-                  isConnected: true,
-                  profilePictureUrl: user.image,
-                },
-              });
-            } catch (e) {}
-          }
-
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            plan: user.plan,
-          } as any;
-        } catch (dbError) {
-          return {
-            id: 'demo-user-id',
-            name,
-            email,
-            image,
-            plan,
-          } as any;
-        }
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          plan: user.plan,
+        } as any;
       },
     }),
   ],
