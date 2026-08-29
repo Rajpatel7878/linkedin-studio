@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+const DEFAULT_GOOGLE_ID = '149007414470-k83on3ir5dtfpbvtbvq24lvgn6u5qeu8.apps.googleusercontent.com';
 
-  if (!clientId) {
-    return NextResponse.redirect(new URL('/login?error=Google+Client+ID+not+configured', req.url));
-  }
+export async function GET(req: NextRequest) {
+  const clientId = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_ID;
 
   const host = req.headers.get('host') || 'linkedin-studio-gules.vercel.app';
   const protocol = host.includes('localhost') ? 'http' : 'https';
