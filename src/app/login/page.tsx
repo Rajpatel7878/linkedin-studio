@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Script from 'next/script';
 import {
   Sparkles,
   Zap,
@@ -17,9 +18,12 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
+  HelpCircle,
 } from 'lucide-react';
 import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 import { Card3D } from '@/components/ui/Card3D';
+
+const GOOGLE_CLIENT_ID = '149007414470-k83on3ir5dtfpbvtbvq24lvgn6u5qeu8.apps.googleusercontent.com';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,6 +44,9 @@ export default function LoginPage() {
   const [isLinkedInLoading, setIsLinkedInLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showGoogleGuide, setShowGoogleGuide] = useState(false);
+
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
   // If already authenticated, redirect to generator
   useEffect(() => {
@@ -48,11 +55,92 @@ export default function LoginPage() {
     }
   }, [status, router]);
 
+  // Handle Google Identity Services (GSI) One Tap / Client Token
+  const handleGoogleCredentialResponse = async (response: any) => {
+    setIsGoogleLoading(true);
+    setErrorMsg(null);
+    try {
+      if (response?.credential) {
+        // Decode Google JWT payload
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const googleUser = JSON.parse(jsonPayload);
+
+        const res = await signIn('google-client', {
+          email: googleUser.email,
+          name: googleUser.name,
+          image: googleUser.picture,
+          callbackUrl: '/generator',
+          redirect: false,
+        });
+
+        if (res?.error) {
+          setErrorMsg(res.error);
+        } else {
+          window.location.href = '/generator';
+        }
+      }
+    } catch (e: any) {
+      console.error('Google One Tap error:', e);
+      window.location.href = '/api/auth/google/login';
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  // Initialize Google Identity Services
+  const initializeGoogleGSI = () => {
+    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+      try {
+        (window as any).google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        if (googleBtnRef.current) {
+          googleBtnRef.current.innerHTML = '';
+          (window as any).google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: 'filled_black',
+            size: 'large',
+            type: 'standard',
+            shape: 'pill',
+            text: 'continue_with',
+            logo_alignment: 'left',
+            width: 360,
+          });
+        }
+
+        // Trigger Google One Tap
+        (window as any).google.accounts.id.prompt();
+      } catch (err) {
+        console.error('Google GSI init error:', err);
+      }
+    }
+  };
+
   // Google OAuth Login
   const handleGoogleLogin = () => {
     setIsGoogleLoading(true);
     setErrorMsg(null);
-    window.location.href = '/api/auth/google/login';
+
+    // Try Google GSI prompt first
+    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+      (window as any).google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          window.location.href = '/api/auth/google/login';
+        }
+      });
+    } else {
+      window.location.href = '/api/auth/google/login';
+    }
   };
 
   // LinkedIn OAuth Login
@@ -138,6 +226,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[88vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Load Google Identity Services SDK */}
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={initializeGoogleGSI}
+      />
+
       <div className="max-w-md w-full">
         <Card3D depth={10} className="glass-panel-3d p-8 sm:p-10 border border-slate-800 shadow-2xl space-y-6">
           {/* Header */}
@@ -203,9 +298,14 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* 1. Google and LinkedIn OAuth Buttons */}
+          {/* 1. Google One Tap / GSI & OAuth Options */}
           <div className="space-y-2.5">
-            {/* Google Continue Button */}
+            {/* Google Identity Services Rendered Container */}
+            <div className="flex justify-center w-full min-h-[44px]">
+              <div ref={googleBtnRef} className="w-full flex justify-center" />
+            </div>
+
+            {/* Fallback Google Button */}
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -234,7 +334,7 @@ export default function LoginPage() {
                   />
                 </svg>
               )}
-              <span>{isGoogleLoading ? 'Redirecting to Google...' : 'Continue with Google'}</span>
+              <span>{isGoogleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
             </button>
 
             {/* LinkedIn Continue Button */}
@@ -251,6 +351,32 @@ export default function LoginPage() {
               )}
               <span>{isLinkedInLoading ? 'Connecting to LinkedIn...' : 'Continue with LinkedIn'}</span>
             </button>
+          </div>
+
+          {/* Quick Helper for Google Console Redirect URI Mismatch */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowGoogleGuide(!showGoogleGuide)}
+              className="text-[11px] text-slate-400 hover:text-cyan-300 flex items-center justify-center gap-1 mx-auto"
+            >
+              <HelpCircle className="w-3 h-3 text-cyan-400" />
+              <span>Google Cloud Console redirect URI setup</span>
+            </button>
+
+            {showGoogleGuide && (
+              <div className="mt-2 p-3 bg-slate-900/90 rounded-2xl border border-slate-800 text-left text-[11px] text-slate-300 space-y-1.5">
+                <span className="font-bold text-white block">
+                  Add this Authorized Redirect URI in Google Cloud:
+                </span>
+                <code className="block p-2 bg-slate-950 rounded-lg text-cyan-300 font-mono text-[10px] break-all select-all">
+                  https://linkedin-studio-gules.vercel.app/api/auth/google/callback
+                </code>
+                <span className="text-[10px] text-slate-400 block">
+                  Also add: <code>https://linkedin-studio-gules.vercel.app/api/auth/callback/google</code>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Divider */}
