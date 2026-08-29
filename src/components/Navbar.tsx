@@ -5,14 +5,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
-  Bell,
   Sparkles,
   Zap,
-  Globe,
   ArrowRight,
   CreditCard,
   LogOut,
+  LogIn,
   User,
+  Settings,
   Shield,
   Activity,
 } from 'lucide-react';
@@ -55,33 +55,42 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-7 text-xs font-bold text-slate-400">
-            <Link href="/#features" className="hover:text-cyan-300 transition-colors">
-              Features
+            <Link href="/generator" className="hover:text-cyan-300 transition-colors">
+              Post Generator
+            </Link>
+            <Link href="/templates" className="hover:text-cyan-300 transition-colors">
+              Templates & Books
             </Link>
             <Link href="/pricing" className="hover:text-cyan-300 transition-colors">
-              Pricing & Plans
-            </Link>
-            <Link href="/#faq" className="hover:text-cyan-300 transition-colors">
-              FAQ
+              Pricing
             </Link>
           </nav>
 
           <div className="flex items-center gap-3">
             {status === 'authenticated' ? (
-              <Link
-                href="/generator"
-                className="btn-3d-primary flex items-center gap-1.5 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-lg active:scale-95"
-              >
-                <span>Go to Studio</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/generator"
+                  className="btn-3d-primary flex items-center gap-1.5 px-4 py-2 rounded-xl text-white font-bold text-xs shadow-lg active:scale-95"
+                >
+                  <span>Open Studio</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-red-950/60 text-slate-300 hover:text-red-300 border border-slate-700/80 text-xs font-semibold transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log Out</span>
+                </button>
+              </div>
             ) : (
               <>
                 <Link
                   href="/login"
                   className="px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white transition-colors"
                 >
-                  Sign In
+                  Log In
                 </Link>
                 <Link
                   href="/login"
@@ -123,23 +132,42 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Right: Quick Links & Profile */}
+      {/* Right: Quick Links, Profile & Log Out */}
       <div className="flex items-center gap-3">
         <Link
           href="/billing"
           className="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 px-3 py-1.5 rounded-xl transition-all shadow-sm"
         >
           <CreditCard className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="hidden sm:inline">Subscription & Usage</span>
+          <span className="hidden sm:inline">Subscription</span>
         </Link>
 
         <Link
           href="/settings"
           className="flex items-center gap-1.5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
-          title="Settings"
+          title="Account Settings"
         >
-          <User className="w-4 h-4" />
+          <Settings className="w-4 h-4" />
         </Link>
+
+        {status === 'authenticated' ? (
+          <button
+            onClick={() => signOut({ callbackUrl: '/' })}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-red-950/60 text-slate-300 hover:text-red-300 border border-slate-700/80 text-xs font-bold transition-colors"
+            title="Log Out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Log Out</span>
+          </button>
+        ) : (
+          <Link
+            href="/login"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl btn-3d-primary text-white text-xs font-bold"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Log In</span>
+          </Link>
+        )}
       </div>
     </header>
   );

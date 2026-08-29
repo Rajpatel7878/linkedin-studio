@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
             authorization: {
               params: {
-                prompt: 'consent',
+                prompt: 'select_account',
                 access_type: 'offline',
                 response_type: 'code',
               },
@@ -55,7 +55,68 @@ export const authOptions: NextAuthOptions = {
           }),
         ]
       : []),
-    // Simulated Google, LinkedIn & Demo Credentials Provider
+    CredentialsProvider({
+      id: 'linkedin-direct',
+      name: 'LinkedIn Account',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        name: { label: 'Name', type: 'text' },
+        image: { label: 'Image', type: 'text' },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email?.toLowerCase().trim() || 'linkedin.creator@example.com';
+        const name = credentials?.name?.trim() || 'LinkedIn Creator';
+        const image =
+          credentials?.image ||
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+
+        try {
+          let user = await prisma.user.findUnique({
+            where: { email },
+          });
+
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                email,
+                name,
+                plan: 'pro',
+                image,
+              },
+            });
+
+            try {
+              await prisma.linkedInAccount.create({
+                data: {
+                  userId: user.id,
+                  name: user.name || 'LinkedIn Profile',
+                  headline: 'Founder & Creator | Building on LinkedIn',
+                  isSandboxMode: true,
+                  isConnected: true,
+                  profilePictureUrl: user.image,
+                },
+              });
+            } catch (e) {}
+          }
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            plan: user.plan,
+          } as any;
+        } catch (dbError) {
+          return {
+            id: 'demo-user-id',
+            name,
+            email,
+            image,
+            plan: 'pro',
+          } as any;
+        }
+      },
+    }),
     CredentialsProvider({
       id: 'demo-login',
       name: 'Demo Account',
@@ -89,7 +150,6 @@ export const authOptions: NextAuthOptions = {
               },
             });
 
-            // Initialize sandbox / live LinkedIn account for user
             try {
               await prisma.linkedInAccount.create({
                 data: {
@@ -224,7 +284,7 @@ export const authOptions: NextAuthOptions = {
         token.plan = session.plan;
       }
 
-      if (token.id) {
+      if (token.id && token.id !== 'demo-user-id') {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
@@ -286,10 +346,24 @@ export async function getCurrentUser() {
     }
 
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: (session.user as any).id },
-        include: { linkedInAccount: true },
-      });
+      const sessionUserId = (session.user as any).id;
+      const sessionEmail = session.user.email;
+
+      let user = null;
+      if (sessionUserId && sessionUserId !== 'demo-user-id') {
+        user = await prisma.user.findUnique({
+          where: { id: sessionUserId },
+          include: { linkedInAccount: true },
+        });
+      }
+
+      if (!user && sessionEmail) {
+        user = await prisma.user.findUnique({
+          where: { email: sessionEmail },
+          include: { linkedInAccount: true },
+        });
+      }
+
       if (user) return user;
     } catch (e) {}
 

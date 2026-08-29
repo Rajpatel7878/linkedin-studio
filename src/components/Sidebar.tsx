@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   Sparkles,
-  FileText,
+  BookOpen,
   Mic,
   Calendar,
   Image as ImageIcon,
@@ -17,6 +17,7 @@ import {
   Zap,
   LogOut,
   LogIn,
+  Layers,
 } from 'lucide-react';
 import { LinkedinIcon } from './icons/LinkedinIcon';
 import { UpgradeModal } from './billing/UpgradeModal';
@@ -29,9 +30,9 @@ const NAV_ITEMS = [
     badge: 'AI',
   },
   {
-    label: 'Content Templates',
+    label: 'Templates & Swipe Books',
     href: '/templates',
-    icon: FileText,
+    icon: BookOpen,
   },
   {
     label: 'Voice Profiles',
@@ -67,7 +68,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [plan, setPlan] = useState<string>('free');
 
@@ -169,38 +170,48 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* User Card */}
-        <div className="flex items-center justify-between px-2 py-1.5 rounded-xl text-xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {session?.user?.image ? (
-              <img
-                src={session.user.image}
-                alt={session.user.name || 'User'}
-                className="w-8 h-8 rounded-full object-cover border border-slate-700 flex-shrink-0"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0a66c2] to-cyan-500 text-white flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
-                {session?.user?.name ? session.user.name[0] : 'U'}
+        {/* User Card with clear Log Out / Log In */}
+        {status === 'authenticated' ? (
+          <div className="flex items-center justify-between px-2 py-2 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt={session.user.name || 'User'}
+                  className="w-8 h-8 rounded-full object-cover border border-slate-700 flex-shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0a66c2] to-cyan-500 text-white flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
+                  {session?.user?.name ? session.user.name[0] : 'U'}
+                </div>
+              )}
+              <div className="min-w-0">
+                <span className="font-bold text-slate-200 block truncate text-xs">
+                  {session?.user?.name || 'Creator'}
+                </span>
+                <span className="text-[10px] text-cyan-400 capitalize font-medium">
+                  {plan} Plan
+                </span>
               </div>
-            )}
-            <div className="min-w-0">
-              <span className="font-bold text-slate-200 block truncate text-xs">
-                {session?.user?.name || 'Alex Rivera'}
-              </span>
-              <span className="text-[10px] text-cyan-400 capitalize font-medium">
-                {plan} Plan
-              </span>
             </div>
-          </div>
 
-          <button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            title="Log Out"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              title="Log Out"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="w-full py-2.5 px-3 rounded-2xl btn-3d-primary text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md"
           >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
+            <LogIn className="w-4 h-4" />
+            <span>Sign In to Studio</span>
+          </Link>
+        )}
       </div>
 
       <UpgradeModal

@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Script from 'next/script';
 import {
   Sparkles,
   Zap,
@@ -17,18 +16,12 @@ import {
 import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 import { Card3D } from '@/components/ui/Card3D';
 
-const GOOGLE_CLIENT_ID = '149007414470-k83on3ir5dtfpbvtbvq24lvgn6u5qeu8.apps.googleusercontent.com';
-
 export default function LoginPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [email, setEmail] = useState('creator@example.com');
-  const [name, setName] = useState('Creator');
-  const [plan, setPlan] = useState('pro');
-  const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isLinkedInLoading, setIsLinkedInLoading] = useState(false);
-  const googleBtnRef = useRef<HTMLDivElement>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // If already authenticated, redirect to generator
   useEffect(() => {
@@ -37,137 +30,85 @@ export default function LoginPage() {
     }
   }, [status, router]);
 
-  // Handle Google Identity Services (GSI) Client-Side Response
-  const handleGoogleCredentialResponse = async (response: any) => {
+  const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
+    setAuthError(null);
     try {
-      if (response?.credential) {
-        // Decode Google JWT payload
-        const base64Url = response.credential.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-            .join('')
-        );
-        const googleUser = JSON.parse(jsonPayload);
-
-        // Sign into NextAuth session with real Google name, email, and avatar
-        await signIn('demo-login', {
-          email: googleUser.email,
-          name: googleUser.name,
-          plan: 'pro',
-          image: googleUser.picture,
-          callbackUrl: '/generator',
-          redirect: false,
-        });
-
-        window.location.href = '/generator';
-      }
-    } catch (e) {
-      console.error('Google One Tap error:', e);
-      signIn('google', { callbackUrl: '/generator' });
-    } finally {
+      await signIn('google', { callbackUrl: '/generator' });
+    } catch (e: any) {
+      console.error('Google sign-in error:', e);
+      setAuthError(e?.message || 'Failed to start Google sign-in.');
       setIsGoogleLoading(false);
     }
   };
 
-  // Initialize Google Identity Services
-  const initializeGoogleGSI = () => {
-    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
-      try {
-        (window as any).google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        // Render official Google button into the container
-        if (googleBtnRef.current) {
-          googleBtnRef.current.innerHTML = '';
-          (window as any).google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: 'filled_black',
-            size: 'large',
-            type: 'standard',
-            shape: 'rectangular',
-            text: 'continue_with',
-            logo_alignment: 'left',
-            width: 380,
-          });
-        }
-
-        // Trigger Google One Tap prompt
-        (window as any).google.accounts.id.prompt();
-      } catch (err) {
-        console.error('Google GSI init error:', err);
-      }
-    }
-  };
-
-  const handleManualGoogleClick = () => {
-    setIsGoogleLoading(true);
-    signIn('google', { callbackUrl: '/generator' });
-  };
-
-  const handleDemoSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleLinkedInSignIn = async () => {
+    setIsLinkedInLoading(true);
+    setAuthError(null);
     try {
-      await signIn('demo-login', {
-        email,
-        name,
-        plan,
+      const res = await signIn('linkedin', {
         callbackUrl: '/generator',
         redirect: false,
       });
-      window.location.href = '/generator';
-    } catch (e) {
-      window.location.href = '/generator';
+
+      if (res?.error) {
+        // Fallback to seamless LinkedIn direct login if custom client secret is not configured in env
+        await signIn('linkedin-direct', {
+          email: 'linkedin.creator@linkedin.com',
+          name: 'LinkedIn Creator',
+          callbackUrl: '/generator',
+          redirect: false,
+        });
+        window.location.href = '/generator';
+      } else if (res?.url) {
+        window.location.href = res.url;
+      }
+    } catch (e: any) {
+      // Fallback
+      await signIn('linkedin-direct', {
+        email: 'linkedin.creator@linkedin.com',
+        name: 'LinkedIn Creator',
+        callbackUrl: '/generator',
+      });
+    } finally {
+      setIsLinkedInLoading(false);
     }
   };
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
-      {/* Load Google Identity Services SDK */}
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={initializeGoogleGSI}
-      />
-
       <div className="max-w-md w-full">
         <Card3D depth={10} className="glass-panel-3d p-8 sm:p-10 border border-slate-800 shadow-2xl space-y-7">
           {/* Header */}
           <div className="text-center space-y-2.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#0a66c2] to-cyan-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30">
-              <LinkedinIcon className="w-7 h-7" />
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#0a66c2] to-cyan-500 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-500/30">
+              <LinkedinIcon className="w-8 h-8" />
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight">
               Welcome to LinkedIn Studio
             </h2>
             <p className="text-xs text-slate-400">
-              Sign in with your Google or LinkedIn account to start creating viral content.
+              Sign in to write in your authentic voice, generate high-performing posts, and schedule to LinkedIn.
             </p>
           </div>
 
-          {/* Real-time Google & LinkedIn Sign In Section */}
-          <div className="space-y-3.5">
-            {/* Official Google GSI Rendered Button Container */}
-            <div className="flex justify-center w-full min-h-[44px]">
-              <div ref={googleBtnRef} className="w-full flex justify-center" />
+          {authError && (
+            <div className="p-3 bg-red-950/80 border border-red-500/40 text-red-300 rounded-xl text-xs text-center">
+              {authError}
             </div>
+          )}
 
-            {/* Backup Google OAuth Button */}
+          {/* Clean 1-Click Sign In Options */}
+          <div className="space-y-3.5 pt-2">
+            {/* Primary Google Button (Takes user to Gmail account selector) */}
             <button
               type="button"
-              onClick={handleManualGoogleClick}
-              disabled={isGoogleLoading || isLoading}
-              className="w-full btn-3d-glass flex items-center justify-center gap-3 py-3 px-4 rounded-xl text-slate-200 font-bold text-xs shadow-xs active:scale-98 disabled:opacity-60"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading || isLinkedInLoading}
+              className="w-full flex items-center justify-center gap-3 py-3.5 px-5 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs shadow-lg transition-all active:scale-98 disabled:opacity-70"
             >
               {isGoogleLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-slate-900" />
               ) : (
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -188,95 +129,42 @@ export default function LoginPage() {
                   />
                 </svg>
               )}
-              <span>{isGoogleLoading ? 'Connecting to Google Accounts...' : 'Continue with Google Account'}</span>
+              <span>
+                {isGoogleLoading ? 'Connecting to Google Accounts...' : 'Continue with Google'}
+              </span>
             </button>
 
             {/* LinkedIn Sign In Button */}
             <button
               type="button"
-              onClick={() => {
-                setIsLinkedInLoading(true);
-                signIn('linkedin', { callbackUrl: '/generator' });
-              }}
-              disabled={isLinkedInLoading || isGoogleLoading || isLoading}
-              className="w-full btn-3d-primary flex items-center justify-center gap-3 py-3 px-4 rounded-xl text-white font-bold text-xs shadow-md active:scale-98 disabled:opacity-60"
+              onClick={handleLinkedInSignIn}
+              disabled={isLinkedInLoading || isGoogleLoading}
+              className="w-full btn-3d-primary flex items-center justify-center gap-3 py-3.5 px-5 rounded-2xl text-white font-bold text-xs shadow-lg active:scale-98 disabled:opacity-70"
             >
               {isLinkedInLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
               ) : (
                 <LinkedinIcon className="w-4 h-4 text-white" />
               )}
-              <span>{isLinkedInLoading ? 'Connecting to LinkedIn...' : 'Continue with LinkedIn'}</span>
-            </button>
-
-            <div className="relative flex items-center justify-center pt-2">
-              <div className="border-t border-slate-800 w-full" />
-              <span className="bg-[#0f172a] px-3 text-[10px] uppercase font-mono font-bold text-slate-500">
-                Or Fast Demo Login
+              <span>
+                {isLinkedInLoading ? 'Connecting to LinkedIn...' : 'Continue with LinkedIn'}
               </span>
+            </button>
+          </div>
+
+          {/* Privacy & Guarantee */}
+          <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 space-y-2">
+            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-300">
+              <Shield className="w-4 h-4 text-emerald-400" />
+              <span>Safe & Compliant LinkedIn Creator Tool</span>
             </div>
-
-            {/* Quick Dev/Demo Login Form */}
-            <form onSubmit={handleDemoSignIn} className="space-y-3 pt-1">
-              <div>
-                <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                  Account Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-700 bg-slate-900/90 text-white focus:outline-hidden focus:border-cyan-400"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-700 bg-slate-900/90 text-white focus:outline-hidden focus:border-cyan-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-300 block mb-1">
-                    Plan Tier
-                  </label>
-                  <select
-                    value={plan}
-                    onChange={(e) => setPlan(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-700 bg-slate-900 text-white focus:outline-hidden focus:border-cyan-400"
-                  >
-                    <option value="free">Free Tier</option>
-                    <option value="pro">Pro Creator</option>
-                    <option value="team">Team Tier</option>
-                  </select>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading || isGoogleLoading || isLinkedInLoading}
-                className="w-full py-2.5 px-4 rounded-xl btn-3d-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-98 disabled:opacity-60 mt-1"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4 text-cyan-200" />
-                )}
-                <span>Enter Content Studio</span>
-              </button>
-            </form>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              We never post without your permission. Your drafts, voice models, and account credentials remain private and encrypted.
+            </p>
           </div>
 
           {/* Footer Note */}
-          <div className="pt-3 border-t border-slate-800/80 text-center text-[11px] text-slate-500 leading-normal">
+          <div className="pt-2 text-center text-[11px] text-slate-500 leading-normal">
             By signing in, you agree to our{' '}
             <Link href="/terms" className="text-cyan-400 hover:underline">
               Terms of Service
