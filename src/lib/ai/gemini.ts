@@ -44,81 +44,67 @@ export async function generateLinkedInDrafts(
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const systemPrompt = buildSystemPrompt(voiceProfile, template);
-    const userPrompt = buildGenerationUserPrompt({
-      topic: request.topic,
-      angles: selectedAngles,
-      targetAudience: request.targetAudience,
-      keyTakeaway: request.keyTakeaway,
-      callToAction: request.callToAction,
-      customInstructions: request.customInstructions,
-      length: request.length,
-    });
-
     const model = genAI.getGenerativeModel({
       model: 'gemini-1.5-flash',
       generationConfig: {
         responseMimeType: 'application/json',
-        temperature: 0.8,
+        temperature: 0.75,
       },
-      systemInstruction: systemPrompt,
+      systemInstruction: buildSystemPrompt(voiceProfile),
     });
 
+    const userPrompt = buildGenerationUserPrompt(request, template);
     const result = await model.generateContent(userPrompt);
     const responseText = result.response.text();
 
     const parsed = JSON.parse(responseText);
-    const draftsArray = parsed.drafts || parsed;
-
-    if (Array.isArray(draftsArray) && draftsArray.length > 0) {
-      const formattedDrafts: GeneratedDraftOption[] = draftsArray.map((item: any) => {
-        const angle: PostAngle = item.angle || 'bold-hook';
-        const tone = item.tone || 'professional';
-        const content = item.content || '';
-        const words = content.split(/\s+/).length;
-        const readMinutes = Math.max(1, Math.round(words / 180));
-        const seeMoreIndex = Math.min(210, content.length);
-
-        return {
-          angle,
-          angleLabel: item.angleLabel || ANGLE_DEFINITIONS[angle]?.label || angle,
-          tone,
-          toneLabel: item.toneLabel || TONE_DEFINITIONS[tone]?.label || tone,
-          hook: item.hook || content.split('\n')[0] || '',
-          content,
-          characterCount: content.length,
-          seeMoreIndex,
-          estimatedReadTime: `${readMinutes} min read`,
-          suggestedHashtags: item.suggestedHashtags || [],
-        };
-      });
+    const drafts: GeneratedDraftOption[] = (parsed.drafts || []).map((d: any, idx: number) => {
+      const angle = (d.angle as PostAngle) || selectedAngles[idx] || 'bold-hook';
+      const angleConfig = ANGLE_DEFINITIONS[angle] || ANGLE_DEFINITIONS['bold-hook'];
+      const content = d.content || '';
+      const charCount = content.length;
+      const words = content.split(/\s+/).filter(Boolean).length;
+      const readSeconds = Math.max(1, Math.round((words / 200) * 60));
+      const readTime = readSeconds < 60 ? `${readSeconds}s read` : `${Math.ceil(readSeconds / 60)}m read`;
 
       return {
-        drafts: formattedDrafts,
-        modelUsed: 'Gemini 1.5 Flash',
-        voiceUsed: !!voiceProfile,
-        templateUsed: template?.name || null,
+        id: `draft-${Date.now()}-${idx}`,
+        angle,
+        angleLabel: angleConfig.label,
+        angleDescription: angleConfig.description,
+        content,
+        hook: d.hook || content.slice(0, 80),
+        seeMoreIndex: d.seeMoreIndex || Math.min(210, content.indexOf('\n') > 0 ? content.indexOf('\n') : 210),
+        characterCount: charCount,
+        estimatedReadTime: readTime,
+        hashtags: d.hashtags || [],
+        cta: d.cta || '',
       };
-    }
-  } catch (error: any) {
-    console.warn('Gemini API call failed, using fallback generator:', error.message);
-  }
+    });
 
-  // Fallback if LLM parsing or API failed
-  const fallbackDrafts = generateSmartFallbackDrafts(
-    request.topic,
-    selectedAngles,
-    request.targetAudience,
-    request.keyTakeaway,
-    voiceProfile,
-    template
-  );
-  return {
-    drafts: fallbackDrafts,
-    modelUsed: 'Smart AI Engine (Fallback)',
-    voiceUsed: !!voiceProfile,
-    templateUsed: template?.name || null,
-  };
+    return {
+      drafts: drafts.length > 0 ? drafts : generateSmartFallbackDrafts(request.topic, selectedAngles, request.targetAudience, request.keyTakeaway, voiceProfile, template),
+      modelUsed: 'Gemini 1.5 Flash (Live LLM)',
+      voiceUsed: !!voiceProfile,
+      templateUsed: template?.name || null,
+    };
+  } catch (error: any) {
+    console.error('Gemini API Error, falling back to smart heuristic generator:', error);
+    const fallbackDrafts = generateSmartFallbackDrafts(
+      request.topic,
+      selectedAngles,
+      request.targetAudience,
+      request.keyTakeaway,
+      voiceProfile,
+      template
+    );
+    return {
+      drafts: fallbackDrafts,
+      modelUsed: 'Smart AI Engine (Local Heuristic Fallback)',
+      voiceUsed: !!voiceProfile,
+      templateUsed: template?.name || null,
+    };
+  }
 }
 
 export async function refinePostWithAI(
@@ -135,7 +121,6 @@ export async function refinePostWithAI(
   } catch (e) {}
 
   if (!apiKey) {
-    // Quick heuristic refinement if no key
     const lower = instruction.toLowerCase();
     if (lower.includes('shorter') || lower.includes('concise')) {
       const lines = content.split('\n').filter((l) => l.trim().length > 0);
@@ -172,5 +157,89 @@ Return ONLY the revised post text without conversational commentary.`;
   } catch (error) {
     console.error('Refine post error:', error);
     return content;
+  }
+}
+
+export async function generateViralHooks(
+  content: string,
+  topic?: string
+): Promise<Array<{ angle: string; label: string; hookText: string; score: number; whyItWorks: string }>> {
+  let apiKey = process.env.GEMINI_API_KEY;
+  try {
+    const setting = await prisma.appSetting.findUnique({
+      where: { key: 'GEMINI_API_KEY' },
+    });
+    if (setting?.value) apiKey = setting.value;
+  } catch (e) {}
+
+  const fallbackHooks = [
+    {
+      angle: 'contrarian',
+      label: 'Contrarian Truth',
+      hookText: `Most advice about ${topic || 'LinkedIn growth'} is completely backwards.\nHere is what actually works in 2026:`,
+      score: 98,
+      whyItWorks: 'Stops the scroll by challenging common assumptions.',
+    },
+    {
+      angle: 'numbered',
+      label: '3-Point Framework',
+      hookText: `I analyzed 500+ top posts in ${topic || 'our industry'}.\n3 counter-intuitive patterns emerged:`,
+      score: 96,
+      whyItWorks: 'Uses specific numbers and proof to build immediate authority.',
+    },
+    {
+      angle: 'cliffhanger',
+      label: 'Raw Story Hook',
+      hookText: `In 2024, I made a mistake that almost destroyed my momentum.\nHere is the real lesson:`,
+      score: 95,
+      whyItWorks: 'Vulnerability drives high empathy and comments.',
+    },
+    {
+      angle: 'bold_statement',
+      label: 'High Conviction',
+      hookText: `The #1 skill that separates top 1% creators from everyone else:\n(It is not what you think)`,
+      score: 97,
+      whyItWorks: 'Creates a curiosity gap before the "...see more" cutoff.',
+    },
+    {
+      angle: 'how_to',
+      label: 'Tactical Playbook',
+      hookText: `How to get results with ${topic || 'content'} in 15 minutes a day:\nA step-by-step breakdown:`,
+      score: 94,
+      whyItWorks: 'Promises high-utility actionable advice.',
+    },
+  ];
+
+  if (!apiKey) return fallbackHooks;
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.8 },
+    });
+
+    const prompt = `You are a viral LinkedIn ghostwriter.
+Generate exactly 5 viral opening hook angles for this post/topic:
+Content: "${content || topic}"
+
+Return JSON:
+{
+  "hooks": [
+    {
+      "angle": "contrarian",
+      "label": "Contrarian Truth",
+      "hookText": "Opening hook text (1-2 lines with \\n)...",
+      "score": 98,
+      "whyItWorks": "Short 1-sentence reason..."
+    }
+  ]
+}`;
+
+    const result = await model.generateContent(prompt);
+    const parsed = JSON.parse(result.response.text());
+    return parsed.hooks || fallbackHooks;
+  } catch (e) {
+    return fallbackHooks;
   }
 }

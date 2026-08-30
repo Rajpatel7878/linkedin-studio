@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Sparkles,
@@ -9,9 +9,6 @@ import {
   Image as ImageIcon,
   CheckCircle2,
   AlertTriangle,
-  Bold,
-  Italic,
-  List,
   ArrowRight,
   Eye,
   Loader2,
@@ -21,35 +18,15 @@ import {
   Scissors,
   Flame,
   Layers,
+  Smartphone,
+  Monitor,
+  Lightbulb,
 } from 'lucide-react';
 import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 import { LinkedInPreview } from './LinkedInPreview';
 import { AISuggestionsPanel } from './AISuggestionsPanel';
-
-// Unicode bold/italic converter helpers
-const toUnicodeBold = (text: string) => {
-  const normal = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const bold = '𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵';
-  return text
-    .split('')
-    .map((char) => {
-      const idx = normal.indexOf(char);
-      return idx !== -1 ? Array.from(bold)[idx] : char;
-    })
-    .join('');
-};
-
-const toUnicodeItalic = (text: string) => {
-  const normal = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const italic = '𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡';
-  return text
-    .split('')
-    .map((char) => {
-      const idx = normal.indexOf(char);
-      return idx !== -1 ? Array.from(italic)[idx] : char;
-    })
-    .join('');
-};
+import { UnicodeToolbar } from './UnicodeToolbar';
+import { analyzeContentMetrics } from '@/lib/unicodeFormat';
 
 interface PostEditorModalProps {
   isOpen: boolean;
@@ -61,6 +38,14 @@ interface PostEditorModalProps {
   postId?: string | null;
   onSaved: () => void;
   onOpenStudio?: (headline: string) => void;
+}
+
+interface HookOption {
+  angle: string;
+  label: string;
+  hookText: string;
+  score: number;
+  whyItWorks: string;
 }
 
 export function PostEditorModal({
@@ -80,15 +65,22 @@ export function PostEditorModal({
   const [imageUrl, setImageUrl] = useState<string | null>(initialImageUrl);
   const [showImageUrlInput, setShowImageUrlInput] = useState(false);
   const [customImageUrl, setCustomImageUrl] = useState('');
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
   const [showScheduleInput, setShowScheduleInput] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
-  
+
+  // Hook Punch-Up Engine State
+  const [showHookDrawer, setShowHookDrawer] = useState(false);
+  const [isPunchingHook, setIsPunchingHook] = useState(false);
+  const [hookOptions, setHookOptions] = useState<HookOption[]>([]);
+
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'warning' } | null>(null);
   const [activeTab, setActiveTab] = useState<'editor' | 'suggestions' | 'preview'>('editor');
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setTopic(initialTopic);
@@ -96,38 +88,15 @@ export function PostEditorModal({
     setTone(initialTone);
     setImageUrl(initialImageUrl);
     setStatusMessage(null);
+    setShowHookDrawer(false);
+    setHookOptions([]);
   }, [initialTopic, initialContent, initialTone, initialImageUrl, isOpen]);
 
   if (!isOpen) return null;
 
-  const characterCount = content.length;
-  const isOverLimit = characterCount > 3000;
-  const isNearLimit = characterCount > 2700;
-  const seeMoreCutoffIndex = 210;
-
-  // Formatting helpers
-  const applyTextFormat = (formatType: 'bold' | 'italic' | 'bullet' | 'arrow') => {
-    const textarea = document.getElementById('post-textarea') as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-
-    let replacement = '';
-    if (formatType === 'bold') {
-      replacement = selectedText ? toUnicodeBold(selectedText) : '𝗯𝗼𝗹𝗱 𝘁𝗲𝘅𝘁';
-    } else if (formatType === 'italic') {
-      replacement = selectedText ? toUnicodeItalic(selectedText) : '𝘪𝘵𝘢𝘭𝘪𝘤 𝘵𝘦𝘅𝘵';
-    } else if (formatType === 'bullet') {
-      replacement = '\n• ';
-    } else if (formatType === 'arrow') {
-      replacement = '\n→ ';
-    }
-
-    const newContent = content.substring(0, start) + replacement + content.substring(end);
-    setContent(newContent);
-  };
+  const metrics = analyzeContentMetrics(content);
+  const isOverLimit = metrics.characters > 3000;
+  const isNearLimit = metrics.characters > 2700;
 
   // AI Refinement Call
   const handleAIQuickAction = async (instruction: string) => {
@@ -156,6 +125,43 @@ export function PostEditorModal({
     } finally {
       setIsRefining(false);
     }
+  };
+
+  // AI Hook Punch-Up Call
+  const handlePunchUpHook = async () => {
+    setShowHookDrawer(true);
+    if (hookOptions.length > 0) return;
+
+    setIsPunchingHook(true);
+    try {
+      const res = await fetch('/api/ai/punch-hook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          topic,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.hooks) {
+        setHookOptions(data.hooks);
+      }
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setIsPunchingHook(false);
+    }
+  };
+
+  const handleApplyHook = (hookText: string) => {
+    const lines = content.split('\n');
+    // Replace opening 1-2 lines with the new hook
+    const remainingBody = lines.slice(2).join('\n').trim();
+    const updated = hookText.trim() + '\n\n' + remainingBody;
+    setContent(updated);
+    setStatusMessage({ text: '🎣 Viral hook applied successfully!', type: 'success' });
+    setShowHookDrawer(false);
   };
 
   const handleReplaceHook = (newHook: string) => {
@@ -307,7 +313,7 @@ export function PostEditorModal({
         <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-white">
-              {postId ? 'Edit LinkedIn Post' : 'Fine-Tune & Polish Post'}
+              {postId ? 'Edit LinkedIn Post' : 'Creator Studio & Formatter'}
             </h2>
             <span className="text-xs uppercase tracking-wider font-semibold text-cyan-300 bg-cyan-950/60 border border-cyan-500/40 px-2.5 py-0.5 rounded-full">
               {tone}
@@ -323,7 +329,7 @@ export function PostEditorModal({
                   activeTab === 'editor' ? 'bg-[#0a66c2] text-white shadow-md' : 'hover:text-white'
                 }`}
               >
-                Editor
+                Editor & Format
               </button>
               <button
                 onClick={() => setActiveTab('suggestions')}
@@ -341,7 +347,7 @@ export function PostEditorModal({
                 }`}
               >
                 <Eye className="w-3.5 h-3.5 text-cyan-300" />
-                <span>Feed Preview</span>
+                <span>Feed Simulator</span>
               </button>
             </div>
 
@@ -384,67 +390,96 @@ export function PostEditorModal({
 
         {/* Modal Main Body Grid */}
         <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left / Main Column: Editor & Formatting Toolbar */}
+          {/* Left / Main Column: Editor, Unicode Toolbar & Hook Engine */}
           <div className={`${activeTab === 'editor' ? 'lg:col-span-7' : activeTab === 'preview' ? 'lg:col-span-6' : 'lg:col-span-6'} space-y-4`}>
-            {/* Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-900/80 border border-slate-800 rounded-xl text-xs">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => applyTextFormat('bold')}
-                  title="Unicode Bold"
-                  className="p-1.5 rounded hover:bg-slate-800 text-slate-300 font-bold"
-                >
-                  <Bold className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => applyTextFormat('italic')}
-                  title="Unicode Italic"
-                  className="p-1.5 rounded hover:bg-slate-800 text-slate-300 italic"
-                >
-                  <Italic className="w-3.5 h-3.5" />
-                </button>
-                <span className="w-px h-4 bg-slate-800 mx-1" />
-                <button
-                  onClick={() => applyTextFormat('bullet')}
-                  title="Insert Bullet"
-                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-800 text-slate-300 font-medium"
-                >
-                  <List className="w-3.5 h-3.5" />
-                  <span>• Bullet</span>
-                </button>
-                <button
-                  onClick={() => applyTextFormat('arrow')}
-                  title="Insert Arrow"
-                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-800 text-slate-300 font-medium"
-                >
-                  <ArrowRight className="w-3.5 h-3.5" />
-                  <span>→ Step</span>
-                </button>
-              </div>
+            {/* Unicode Formatting Toolbar */}
+            <UnicodeToolbar
+              textareaRef={textareaRef}
+              content={content}
+              onChange={setContent}
+            />
 
+            {/* Hook Punch-Up Trigger Bar */}
+            <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-blue-950/40 border border-blue-500/30 text-xs">
               <div className="flex items-center gap-2">
-                {onOpenStudio && (
-                  <button
-                    onClick={() => onOpenStudio(content.slice(0, 80))}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-950/60 text-purple-300 border border-purple-500/30 hover:bg-purple-900/60 font-medium text-xs transition-colors"
-                  >
-                    <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Create Visual Card</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setShowImageUrlInput(!showImageUrlInput)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded border transition-colors ${
-                    imageUrl
-                      ? 'bg-blue-950/60 text-cyan-300 border-blue-500/40 font-medium'
-                      : 'bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800'
-                  }`}
-                >
-                  <span>{imageUrl ? 'Image Attached' : 'Attach Image'}</span>
-                </button>
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <span className="font-bold text-slate-200">Viral Hook Optimization</span>
               </div>
+
+              <button
+                type="button"
+                onClick={handlePunchUpHook}
+                disabled={isPunchingHook}
+                className="btn-3d-primary flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50"
+              >
+                {isPunchingHook ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Flame className="w-3.5 h-3.5 text-yellow-300" />
+                )}
+                <span>🎣 Punch-Up Opening Hook (5 Angles)</span>
+              </button>
             </div>
+
+            {/* Hook Punch-Up 5 Variations Drawer */}
+            {showHookDrawer && (
+              <div className="p-4 bg-slate-900/95 border border-cyan-500/40 rounded-2xl space-y-3 animate-fade-in shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span className="font-bold text-white text-xs">Choose a Scroll-Stopping Opening Hook</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowHookDrawer(false)}
+                    className="text-xs text-slate-400 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {isPunchingHook ? (
+                  <div className="py-8 flex flex-col items-center justify-center gap-2 text-xs text-cyan-300">
+                    <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+                    <span>Synthesizing 5 high-converting hook angles...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                    {hookOptions.map((hook, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 hover:border-cyan-500/50 transition-all group flex items-start justify-between gap-3"
+                      >
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                              {hook.label}
+                            </span>
+                            <span className="text-[10px] font-mono text-emerald-400 font-bold">
+                              ★ Viral {hook.score}/100
+                            </span>
+                          </div>
+                          <p className="text-xs font-semibold text-slate-100 italic whitespace-pre-wrap">
+                            &ldquo;{hook.hookText}&rdquo;
+                          </p>
+                          <p className="text-[10px] text-slate-400">
+                            {hook.whyItWorks}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleApplyHook(hook.hookText)}
+                          className="btn-3d-primary flex-shrink-0 px-3 py-1.5 rounded-xl text-white text-[11px] font-bold shadow-md active:scale-95"
+                        >
+                          Use Hook
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Image Drawer */}
             {showImageUrlInput && (
@@ -484,52 +519,48 @@ export function PostEditorModal({
               </div>
             )}
 
-            {/* Textarea with See-More Cutoff Line Overlay */}
+            {/* Textarea with Cutoff Bar */}
             <div className="relative space-y-1">
-              {/* LinkedIn Cutoff Indicator Bar */}
-              <div className="flex items-center justify-between text-[11px] px-1 font-medium text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  Above-the-fold Hook ({Math.min(characterCount, seeMoreCutoffIndex)} / ~210 chars)
-                </span>
-                <span className="text-[10px] text-slate-500">
-                  Visible in feed before user clicks &ldquo;...see more&rdquo;
-                </span>
-              </div>
+              <textarea
+                ref={textareaRef}
+                id="post-textarea"
+                rows={13}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Draft your LinkedIn post here..."
+                className={`w-full p-4 rounded-2xl border font-sans text-sm leading-relaxed text-white bg-slate-900/90 focus:outline-hidden focus:ring-2 transition-all resize-y shadow-inner ${
+                  isOverLimit
+                    ? 'border-red-500/80 focus:ring-red-500/40'
+                    : 'border-slate-800 focus:ring-cyan-500/30 focus:border-cyan-400'
+                }`}
+              />
 
-              <div className="relative">
-                <textarea
-                  id="post-textarea"
-                  rows={13}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Draft your LinkedIn post here..."
-                  className={`w-full p-4 rounded-2xl border font-sans text-sm leading-relaxed text-white bg-slate-900/90 focus:outline-hidden focus:ring-2 transition-all resize-y shadow-inner ${
-                    isOverLimit
-                      ? 'border-red-500/80 focus:ring-red-500/40'
-                      : 'border-slate-800 focus:ring-cyan-500/30 focus:border-cyan-400'
-                  }`}
-                />
-              </div>
-
-              {/* Character Counter Info */}
-              <div className="flex items-center justify-between text-xs pt-1 px-1">
-                <span
-                  className={`font-mono font-semibold ${
-                    isOverLimit
-                      ? 'text-red-400'
-                      : isNearLimit
-                      ? 'text-amber-400'
-                      : 'text-slate-500'
-                  }`}
-                >
-                  {characterCount} / 3,000 chars
-                </span>
-                {isOverLimit && (
-                  <span className="text-red-400 font-bold">
-                    Exceeds LinkedIn 3,000 limit!
+              {/* Real-Time Metrics Info */}
+              <div className="flex flex-wrap items-center justify-between text-xs pt-1 px-1 gap-2">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`font-mono font-semibold ${
+                      isOverLimit
+                        ? 'text-red-400'
+                        : isNearLimit
+                        ? 'text-amber-400'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    {metrics.characters} / 3,000 chars
                   </span>
-                )}
+                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-400 font-mono">{metrics.words} words</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-slate-400 font-mono">{metrics.readTimeFormatted}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-400 text-[11px]">Readability:</span>
+                  <span className={`font-bold font-mono text-[11px] ${metrics.readabilityColor}`}>
+                    {metrics.readabilityLabel} ({metrics.readabilityScore}/100)
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -551,7 +582,7 @@ export function PostEditorModal({
                 <button
                   type="button"
                   disabled={isRefining}
-                  onClick={() => handleAIQuickAction('Make this post 30% shorter and punchier')}
+                  onClick={() => handleAIQuickAction('Make this post 30% shorter, punchier and eliminate filler')}
                   className="p-2 rounded-xl btn-3d-glass text-xs font-semibold text-slate-200 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
                 >
                   <Scissors className="w-3 h-3 text-cyan-400" />
@@ -617,7 +648,7 @@ export function PostEditorModal({
 
           {/* Right Column: AI Suggestions Panel OR Live Feed Simulation */}
           <div className={`${activeTab === 'editor' ? 'lg:col-span-5' : 'lg:col-span-6'} space-y-4`}>
-            {activeTab === 'suggestions' || activeTab === 'editor' ? (
+            {activeTab === 'suggestions' ? (
               <AISuggestionsPanel
                 content={content}
                 topic={topic}
