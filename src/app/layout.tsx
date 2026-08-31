@@ -168,7 +168,7 @@ export default function RootLayout({
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#090d16]">
               <Navbar />
-              <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#090d16]">
+              <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8 bg-[#090d16]">
                 <div className="max-w-7xl mx-auto w-full">{children}</div>
               </main>
             </div>
