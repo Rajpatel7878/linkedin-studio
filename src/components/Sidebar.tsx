@@ -21,6 +21,8 @@ import {
   Menu,
   X,
   Compass,
+  Bot,
+  MessageSquare,
 } from 'lucide-react';
 import { LinkedinIcon } from './icons/LinkedinIcon';
 import { UpgradeModal } from './billing/UpgradeModal';
@@ -31,6 +33,12 @@ export const NAV_ITEMS = [
     href: '/generator',
     icon: Sparkles,
     badge: 'AI',
+  },
+  {
+    label: 'AI Copilot (RAG Chat)',
+    href: '/chat',
+    icon: Bot,
+    badge: 'RAG',
   },
   {
     label: 'Templates & Swipe Books',
@@ -346,17 +354,27 @@ export function Sidebar() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0d121f]/95 backdrop-blur-xl border-t border-slate-800/90 px-2 py-1.5 shadow-2xl flex items-center justify-around">
         <Link
           href="/generator"
-          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all ${
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-bold transition-all ${
             pathname === '/generator' ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          <span>Generator</span>
+          <span>Studio</span>
+        </Link>
+
+        <Link
+          href="/chat"
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-bold transition-all ${
+            pathname === '/chat' ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Bot className="w-4 h-4" />
+          <span>AI Copilot</span>
         </Link>
 
         <Link
           href="/templates"
-          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all ${
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-bold transition-all ${
             pathname === '/templates' ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -365,18 +383,8 @@ export function Sidebar() {
         </Link>
 
         <Link
-          href="/voice"
-          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all ${
-            pathname === '/voice' ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Mic className="w-4 h-4" />
-          <span>Voice DNA</span>
-        </Link>
-
-        <Link
           href="/calendar"
-          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all ${
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-bold transition-all ${
             pathname === '/calendar' ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -387,7 +395,7 @@ export function Sidebar() {
         <button
           type="button"
           onClick={() => setIsMobileDrawerOpen(true)}
-          className="flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-xl text-[10px] font-bold text-slate-400 hover:text-cyan-300 transition-all cursor-pointer"
+          className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-bold text-slate-400 hover:text-cyan-300 transition-all cursor-pointer"
         >
           <Menu className="w-4 h-4" />
           <span>Menu</span>
