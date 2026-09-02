@@ -21,6 +21,7 @@ import {
   Smartphone,
   Monitor,
   Lightbulb,
+  Trash2,
 } from 'lucide-react';
 import { LinkedinIcon } from '@/components/icons/LinkedinIcon';
 import { LinkedInPreview } from './LinkedInPreview';
@@ -67,6 +68,7 @@ export function PostEditorModal({
   const [customImageUrl, setCustomImageUrl] = useState('');
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
   const [showScheduleInput, setShowScheduleInput] = useState(false);
@@ -100,6 +102,11 @@ export function PostEditorModal({
 
   // AI Refinement Call
   const handleAIQuickAction = async (instruction: string) => {
+    if (!content.trim()) {
+      setStatusMessage({ text: 'Please write some text in the editor to refine.', type: 'warning' });
+      return;
+    }
+
     setIsRefining(true);
     setStatusMessage(null);
     try {
@@ -107,9 +114,10 @@ export function PostEditorModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          currentContent: content,
+          content: content.trim(),
+          currentContent: content.trim(),
           instruction,
-          topic,
+          topic: topic || 'LinkedIn Post',
         }),
       });
 
@@ -176,8 +184,46 @@ export function PostEditorModal({
     }
   };
 
+  const handleClearContent = () => {
+    if (content.trim() && !confirm('Clear all content from the editor?')) return;
+    setContent('');
+    setStatusMessage({ text: 'Editor content cleared', type: 'success' });
+  };
+
+  const handleDeletePost = async () => {
+    if (!postId) {
+      setContent('');
+      onClose();
+      return;
+    }
+
+    if (!confirm('Are you sure you want to permanently delete this post?')) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setStatusMessage({ text: 'Post deleted successfully', type: 'success' });
+        onSaved();
+        setTimeout(() => onClose(), 1000);
+      } else {
+        setStatusMessage({ text: data.error || 'Failed to delete post', type: 'error' });
+      }
+    } catch (e: any) {
+      setStatusMessage({ text: e.message, type: 'error' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Save as Draft
   const handleSaveDraft = async () => {
+    if (!content.trim()) {
+      setStatusMessage({ text: 'Please write some text before saving.', type: 'warning' });
+      return;
+    }
+
     setIsSaving(true);
     setStatusMessage(null);
     try {
@@ -188,8 +234,8 @@ export function PostEditorModal({
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          topic: topic || 'LinkedIn Post',
-          content,
+          topic: topic?.trim() || content.trim().slice(0, 60) || 'LinkedIn Post Draft',
+          content: content.trim(),
           tone,
           status: 'DRAFT',
           imageUrl,
@@ -199,11 +245,11 @@ export function PostEditorModal({
 
       const data = await res.json();
       if (data.success) {
-        setStatusMessage({ text: 'Saved to drafts successfully!', type: 'success' });
+        setStatusMessage({ text: '✓ Saved to drafts library successfully!', type: 'success' });
         onSaved();
         setTimeout(() => onClose(), 1200);
       } else {
-        setStatusMessage({ text: data.error || 'Failed to save', type: 'error' });
+        setStatusMessage({ text: data.error || 'Failed to save draft', type: 'error' });
       }
     } catch (e: any) {
       setStatusMessage({ text: e.message, type: 'error' });
@@ -219,6 +265,11 @@ export function PostEditorModal({
       return;
     }
 
+    if (!content.trim()) {
+      setStatusMessage({ text: 'Please enter content before scheduling', type: 'warning' });
+      return;
+    }
+
     setIsSaving(true);
     setStatusMessage(null);
     try {
@@ -228,7 +279,7 @@ export function PostEditorModal({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            topic: topic || 'LinkedIn Post',
+            topic: topic || content.slice(0, 60) || 'LinkedIn Post',
             content,
             tone,
             status: 'SCHEDULED',
@@ -247,7 +298,7 @@ export function PostEditorModal({
         });
       }
 
-      setStatusMessage({ text: `Post scheduled for ${new Date(scheduledAt).toLocaleString()}`, type: 'success' });
+      setStatusMessage({ text: `✓ Post scheduled for ${new Date(scheduledAt).toLocaleString()}`, type: 'success' });
       onSaved();
       setTimeout(() => onClose(), 1500);
     } catch (e: any) {
@@ -270,7 +321,7 @@ export function PostEditorModal({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            topic: topic || 'LinkedIn Post',
+            topic: topic || content.slice(0, 60) || 'LinkedIn Post',
             content,
             tone,
             status: 'DRAFT',
@@ -391,11 +442,12 @@ export function PostEditorModal({
         <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* Left / Main Column: Editor, Unicode Toolbar & Hook Engine */}
           <div className={`${activeTab === 'editor' ? 'lg:col-span-7' : activeTab === 'preview' ? 'lg:col-span-6' : 'lg:col-span-6'} space-y-3 sm:space-y-4`}>
-            {/* Unicode Formatting Toolbar */}
+            {/* Unicode Formatting Toolbar with ALL Emojis */}
             <UnicodeToolbar
               textareaRef={textareaRef}
               content={content}
               onChange={setContent}
+              onClear={handleClearContent}
             />
 
             {/* Hook Punch-Up Trigger Bar */}
@@ -518,7 +570,7 @@ export function PostEditorModal({
               </div>
             )}
 
-            {/* Textarea with Metrics */}
+            {/* Textarea with Real-Time Word & Readability Metrics */}
             <div className="relative space-y-1">
               <textarea
                 ref={textareaRef}
@@ -663,12 +715,26 @@ export function PostEditorModal({
 
         {/* Modal Footer (Responsive Wrap) */}
         <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-900/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
-          <button
-            onClick={onClose}
-            className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 transition-colors"
-          >
-            Cancel
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-xs font-medium text-slate-300 hover:bg-slate-700 transition-colors"
+            >
+              Cancel
+            </button>
+
+            {postId && (
+              <button
+                onClick={handleDeletePost}
+                disabled={isDeleting}
+                className="px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-red-500/30 bg-red-950/40 hover:bg-red-900/50 text-xs font-semibold text-red-300 transition-all flex items-center gap-1"
+                title="Delete this draft permanently"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">{isDeleting ? 'Deleting...' : 'Delete'}</span>
+              </button>
+            )}
+          </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <button

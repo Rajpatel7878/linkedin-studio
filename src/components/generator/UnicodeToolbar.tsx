@@ -11,6 +11,8 @@ import {
   Smile,
   List,
   Flame,
+  Trash2,
+  ChevronDown,
 } from 'lucide-react';
 import {
   toBoldUnicode,
@@ -25,16 +27,47 @@ interface UnicodeToolbarProps {
   content: string;
   onChange: (newContent: string) => void;
   className?: string;
+  onClear?: () => void;
 }
+
+const EMOJI_CATEGORIES = [
+  {
+    name: 'Top Creator',
+    icon: '🔥',
+    emojis: ['🔥', '💡', '🚀', '📈', '🧠', '🎯', '👇', '✨', '⚡', '📌', '🤝', '💎', '🚨', '🏆', '💥', '⏳', '📣', '🔑', '🌱', '🌐'],
+  },
+  {
+    name: 'Business & Tech',
+    icon: '💼',
+    emojis: ['📊', '💼', '📈', '💰', '💵', '🏢', '💻', '📱', '✍️', '📚', '🛠️', '🔍', '📉', '🤖', '⚙️', '✉️', '🔒', '🛡️', '📦', '🎯'],
+  },
+  {
+    name: 'Faces & Gestures',
+    icon: '😀',
+    emojis: ['🤯', '🤩', '😎', '🤔', '🧐', '👏', '🙌', '🙏', '👍', '👌', '❤️', '💯', '🥳', '😂', '🤫', '👀', '💪', '🤝', '👋', '🎉'],
+  },
+  {
+    name: 'Pointers & Numbers',
+    icon: '👉',
+    emojis: ['👇', '👆', '👉', '👈', '➡️', '⬇️', '⬆️', '🔄', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '✅', '❌'],
+  },
+  {
+    name: 'Shapes & Badges',
+    icon: '⭐️',
+    emojis: ['⭐', '🌟', '✦', '✧', '🔷', '🔶', '🔘', '🟢', '🔴', '🟡', '🟣', '⬛', '⬜', '🛡️', '⚡', '💡', '🔥', '💎', '🏷️', '🔖'],
+  },
+];
 
 export function UnicodeToolbar({
   textareaRef,
   content,
   onChange,
   className = '',
+  onClear,
 }: UnicodeToolbarProps) {
   const [showEmojis, setShowEmojis] = useState(false);
   const [showBullets, setShowBullets] = useState(false);
+  const [activeEmojiCategory, setActiveEmojiCategory] = useState(0);
 
   const applyFormatting = (formatter: (text: string) => string) => {
     const textarea = textareaRef.current;
@@ -82,7 +115,6 @@ export function UnicodeToolbar({
     }, 10);
   };
 
-  const emojis = ['🔥', '💡', '🚀', '📈', '🧠', '🎯', '👇', '✨', '⚡', '📌', '🤝', '💎'];
   const bullets = [
     { label: 'Arrow →', symbol: '→ ' },
     { label: 'Sparkle ✦', symbol: '✦ ' },
@@ -90,12 +122,14 @@ export function UnicodeToolbar({
     { label: 'Bullet •', symbol: '• ' },
     { label: 'Lightning ⚡', symbol: '⚡ ' },
     { label: 'Pin 📌', symbol: '📌 ' },
+    { label: 'Diamond 💎', symbol: '💎 ' },
+    { label: 'Key 🔑', symbol: '🔑 ' },
   ];
 
   return (
     <div className={`flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs shadow-inner ${className}`}>
       {/* Text Style Controls */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-wrap">
         <button
           type="button"
           onClick={() => applyFormatting(toBoldUnicode)}
@@ -143,10 +177,23 @@ export function UnicodeToolbar({
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
+
+        {onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            title="Clear all editor text"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-all flex items-center gap-1"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="text-[10px]">Clear</span>
+          </button>
+        )}
       </div>
 
-      {/* Bullets & Emojis Controls */}
+      {/* Bullets & Full Emoji Palette */}
       <div className="flex items-center gap-1 relative">
+        {/* Bullets Menu */}
         <div className="relative">
           <button
             type="button"
@@ -165,7 +212,7 @@ export function UnicodeToolbar({
           </button>
 
           {showBullets && (
-            <div className="absolute right-0 top-full mt-1.5 p-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 grid grid-cols-2 gap-1 w-44 animate-fade-in">
+            <div className="absolute right-0 top-full mt-1.5 p-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 grid grid-cols-2 gap-1 w-48 animate-fade-in">
               {bullets.map((b) => (
                 <button
                   key={b.label}
@@ -184,6 +231,7 @@ export function UnicodeToolbar({
           )}
         </div>
 
+        {/* Full Emoji Suite */}
         <div className="relative">
           <button
             type="button"
@@ -198,24 +246,56 @@ export function UnicodeToolbar({
             }`}
           >
             <Smile className="w-3.5 h-3.5 text-yellow-400" />
-            <span>Emojis</span>
+            <span>All Emojis ({EMOJI_CATEGORIES.reduce((acc, cat) => acc + cat.emojis.length, 0)})</span>
           </button>
 
           {showEmojis && (
-            <div className="absolute right-0 top-full mt-1.5 p-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 flex flex-wrap gap-1.5 w-48 animate-fade-in">
-              {emojis.map((emoji) => (
+            <div className="absolute right-0 top-full mt-1.5 p-3 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-50 w-72 sm:w-80 space-y-2.5 animate-fade-in">
+              {/* Category tabs */}
+              <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1 border-b border-slate-800 no-scrollbar">
+                {EMOJI_CATEGORIES.map((cat, idx) => (
+                  <button
+                    key={cat.name}
+                    type="button"
+                    onClick={() => setActiveEmojiCategory(idx)}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-colors flex items-center gap-1 ${
+                      activeEmojiCategory === idx
+                        ? 'bg-[#0a66c2] text-white shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>{cat.icon}</span>
+                    <span className="hidden sm:inline">{cat.name.split(' ')[0]}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Emoji grid */}
+              <div className="grid grid-cols-6 sm:grid-cols-7 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                {EMOJI_CATEGORIES[activeEmojiCategory].emojis.map((emoji, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      insertTextAtCursor(` ${emoji} `);
+                    }}
+                    className="w-8 h-8 flex items-center justify-center text-base hover:bg-slate-800 rounded-xl transition-transform active:scale-125 cursor-pointer"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800">
+                <span>Click any emoji to insert at cursor</span>
                 <button
-                  key={emoji}
                   type="button"
-                  onClick={() => {
-                    insertTextAtCursor(` ${emoji} `);
-                    setShowEmojis(false);
-                  }}
-                  className="w-7 h-7 flex items-center justify-center text-sm hover:bg-slate-800 rounded-lg transition-colors"
+                  onClick={() => setShowEmojis(false)}
+                  className="text-cyan-400 hover:underline"
                 >
-                  {emoji}
+                  Done
                 </button>
-              ))}
+              </div>
             </div>
           )}
         </div>

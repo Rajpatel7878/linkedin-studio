@@ -134,8 +134,11 @@ export async function POST(req: NextRequest) {
       templateId,
     } = body;
 
-    if (!topic || !content) {
-      return NextResponse.json({ error: 'Topic and content are required' }, { status: 400 });
+    const finalContent = content?.trim() || '';
+    const finalTopic = topic?.trim() || finalContent.slice(0, 60) || 'LinkedIn Post Draft';
+
+    if (!finalContent) {
+      return NextResponse.json({ error: 'Post content cannot be empty' }, { status: 400 });
     }
 
     if (status === 'SCHEDULED' || status === 'PUBLISHED') {
@@ -151,13 +154,13 @@ export async function POST(req: NextRequest) {
       const post = await prisma.post.create({
         data: {
           userId: user.id,
-          topic,
-          content,
+          topic: finalTopic,
+          content: finalContent,
           tone,
           angle,
           status,
           scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-          imageUrl,
+          imageUrl: imageUrl || null,
           mediaType,
           voiceProfileId: voiceProfileId || null,
           templateId: templateId || null,
@@ -174,8 +177,8 @@ export async function POST(req: NextRequest) {
       const mockPost = {
         id: `post-${Date.now()}`,
         userId: user.id,
-        topic,
-        content,
+        topic: finalTopic,
+        content: finalContent,
         tone,
         angle,
         status,
