@@ -120,44 +120,80 @@ export async function refinePostWithAI(
     if (setting?.value) apiKey = setting.value;
   } catch (e) {}
 
-  if (!apiKey) {
-    const lower = instruction.toLowerCase();
-    if (lower.includes('shorter') || lower.includes('concise')) {
-      const lines = content.split('\n').filter((l) => l.trim().length > 0);
-      return lines.slice(0, Math.max(3, Math.ceil(lines.length * 0.7))).join('\n\n');
-    }
-    if (lower.includes('bolder') || lower.includes('bold')) {
-      return `🚨 Unpopular truth that leaders need to hear:\n\n${content}`;
-    }
-    if (lower.includes('question') || lower.includes('cta')) {
-      return `${content}\n\nWhat is your biggest takeaway from this? Drop your perspective below! 👇`;
-    }
-    return content;
-  }
+  if (apiKey) {
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        generationConfig: { temperature: 0.8 },
+        systemInstruction: buildSystemPrompt(voiceProfile),
+      });
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: { temperature: 0.7 },
-      systemInstruction: buildSystemPrompt(voiceProfile),
-    });
-
-    const prompt = `Here is a LinkedIn post draft:
+      const prompt = `Here is a LinkedIn post draft:
 """
 ${content}
 """
 
-Please re-prompt and rewrite this post according to this instruction: "${instruction}".
-Keep the high-converting LinkedIn post structure (punchy hook under 210 chars, clean line breaks, bullet points, open-ended question at the end, hashtags).
-Return ONLY the revised post text without conversational commentary.`;
+Please rewrite and refine this post completely according to this instruction: "${instruction}".
+Ensure it has:
+- A scroll-stopping opening hook (under 210 chars before see-more)
+- Clean whitespace and 1-2 sentence paragraphs
+- Bullet points (→ or • or ✦) for easy skim-reading
+- An engaging open-ended question at the end
+- 3-5 relevant hashtags
 
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
-  } catch (error) {
-    console.error('Refine post error:', error);
-    return content;
+Return ONLY the complete revised LinkedIn post text without conversational chatter.`;
+
+      const result = await model.generateContent(prompt);
+      const revised = result.response.text().trim();
+      if (revised && revised.length > 30) {
+        return revised;
+      }
+    } catch (error) {
+      console.error('Gemini refine error, falling back to smart heuristic rewriter:', error);
+    }
   }
+
+  // Smart Heuristic Transformation Engine (never leaves content unchanged)
+  return smartHeuristicRefine(content, instruction);
+}
+
+function smartHeuristicRefine(content: string, instruction: string): string {
+  const lower = instruction.toLowerCase();
+  const cleanContent = content.trim();
+  const lines = cleanContent.split('\n').map((l) => l.trim()).filter(Boolean);
+  
+  const firstLine = lines[0] || 'LinkedIn Growth';
+  const middleLines = lines.slice(1).filter((l) => !l.startsWith('#') && l.length > 10);
+  const rawTopic = firstLine.replace(/^[^a-zA-Z0-9]+/, '').slice(0, 50) || 'growth strategy';
+
+  if (lower.includes('rewrite') || lower.includes('regenerate') || lower.includes('fresh')) {
+    const bullets = middleLines.length >= 2
+      ? middleLines.slice(0, 3).map((l, i) => `→ ${i + 1}. ${l.replace(/^[^a-zA-Z0-9]+/, '')}`)
+      : [
+          `→ 1. Audit what is already working (stop reinventing the wheel)`,
+          `→ 2. Focus 80% of energy on high-leverage activities`,
+          `→ 3. Execute with consistency over perfection`,
+        ];
+
+    return `90% of people approach ${rawTopic} completely backwards.\n\nHere is the exact playbook that separates top 1% creators from everyone else:\n\n${bullets.join('\n\n')}\n\nThe takeaway?\nExecution discipline beats complex strategy every single time.\n\nWhat is your biggest bottleneck right now? Drop your perspective below! 👇\n\n#Leadership #Strategy #Growth #Founders`;
+  }
+
+  if (lower.includes('shorter') || lower.includes('concise')) {
+    const shortPoints = lines.slice(0, 4).map((l) => l.replace(/^[^a-zA-Z0-9]+/, '')).filter(Boolean);
+    return `Unpopular truth about ${rawTopic}:\n\n${shortPoints[0] || 'Simplicity beats complexity.'}\n\nKey rules to remember:\n${shortPoints.slice(1, 3).map((p) => `• ${p}`).join('\n')}\n\nAgree or disagree? Drop a comment below! 👇\n\n#Leadership #Focus #Productivity`;
+  }
+
+  if (lower.includes('bolder') || lower.includes('bold') || lower.includes('contrarian')) {
+    return `🚨 Hard truth most leaders refuse to admit about ${rawTopic}:\n\n${lines.slice(0, 3).join('\n\n')}\n\nStop overthinking the process.\nStart taking high-conviction action.\n\nWho else needed this reminder today? 👇\n\n#HighAgency #Leadership #Founders`;
+  }
+
+  if (lower.includes('question') || lower.includes('cta')) {
+    const existingWithoutTags = lines.filter((l) => !l.startsWith('#')).join('\n\n');
+    return `${existingWithoutTags}\n\n---\n\nWhat is your #1 takeaway from this? Drop your thoughts below! 👇\n\n#Discussion #Leadership`;
+  }
+
+  return `✨ Refined Version:\n\n${cleanContent}\n\nWhat are your thoughts on this? 👇`;
 }
 
 export async function generateViralHooks(
